@@ -28,8 +28,16 @@ function saveSearchState() {
 
 // ── Список поддерживаемых городов ─────────────────────
 const CITIES = [
-    { label: "Афины",  value: "Афины",  flag: "🇬🇷" },
-    { label: "Рим",    value: "Рим",    flag: "🇮🇹" },
+    { label: "Афины",     value: "Афины",     flag: "🇬🇷", destId: -814876  },
+    { label: "Рим",       value: "Рим",       flag: "🇮🇹", destId: -126693  },
+    { label: "Париж",     value: "Париж",     flag: "🇫🇷", destId: -1456928 },
+    { label: "Лондон",    value: "Лондон",    flag: "🇬🇧", destId: -2601889 },
+    { label: "Барселона", value: "Барселона", flag: "🇪🇸", destId: -370458  },
+    { label: "Берлин",    value: "Берлин",    flag: "🇩🇪", destId: -1746443 },
+    { label: "Прага",     value: "Прага",     flag: "🇨🇿", destId: -832080  },
+    { label: "Стамбул",   value: "Стамбул",   flag: "🇹🇷", destId: -820238  },
+    { label: "Дубай",     value: "Дубай",     flag: "🇦🇪", destId: -323891  },
+    { label: "Токио",     value: "Токио",     flag: "🇯🇵", destId: -245026  },
 ];
 
 // ── Вспомогательные форматировщики ────────────────────
@@ -113,6 +121,7 @@ function buildCityPanel() {
             updateUI();
             saveSearchState();
             closeCityPanel();
+            if (typeof loadHotelsBySearch === "function") loadHotelsBySearch();
         });
         list.appendChild(btn);
     });
@@ -174,8 +183,8 @@ function buildCalendarPanel() {
             <button id="calCloseBtn" style="background:none;border:none;font-size:28px;cursor:pointer;color:#555;">&times;</button>
         </div>
         <div id="calSelectedDates" style="display:flex;gap:10px;margin-bottom:14px;">
-            <div id="calCheckinLabel"  style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;"></div>
-            <div id="calCheckoutLabel" style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;"></div>
+            <div id="calCheckinLabel"  title="ПКМ — сбросить дату" style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;cursor:context-menu;"></div>
+            <div id="calCheckoutLabel" title="ПКМ — сбросить дату" style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;cursor:context-menu;"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
             <button id="calPrev" style="background:none;border:none;font-size:26px;cursor:pointer;padding:4px 10px;border-radius:6px;color:#333;">&#8249;</button>
@@ -197,6 +206,18 @@ function buildCalendarPanel() {
     document.getElementById("calPrev").addEventListener("click", () => { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCal(); });
     document.getElementById("calNext").addEventListener("click", () => { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCal(); });
     document.getElementById("calConfirmBtn").addEventListener("click", confirmDates);
+
+    // ПКМ на пилюли дат — сброс
+    document.getElementById("calCheckinLabel").addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        calSelectState.checkin = null; calSelectState.step = "checkin";
+        renderCal(); updateCalLabels();
+    });
+    document.getElementById("calCheckoutLabel").addEventListener("contextmenu", (e) => {
+        e.preventDefault();
+        calSelectState.checkout = null; calSelectState.step = "checkout";
+        renderCal(); updateCalLabels();
+    });
 }
 
 let calMonth, calYear;
@@ -290,6 +311,17 @@ function renderCal() {
             }
             renderCal(); updateCalLabels();
         });
+        // ПКМ — сбросить ближайшую выбранную дату
+        cell.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            const isCI = calSelectState.checkin  === dateStr;
+            const isCO = calSelectState.checkout === dateStr;
+            if (isCI) { calSelectState.checkin = null; calSelectState.step = "checkin"; }
+            else if (isCO) { calSelectState.checkout = null; calSelectState.step = "checkout"; }
+            else if (calSelectState.checkout) { calSelectState.checkout = null; calSelectState.step = "checkout"; }
+            else if (calSelectState.checkin)  { calSelectState.checkin  = null; calSelectState.step = "checkin"; }
+            renderCal(); updateCalLabels();
+        });
         grid.appendChild(cell);
     }
 }
@@ -299,9 +331,8 @@ function confirmDates() {
     searchState.checkin  = calSelectState.checkin;
     searchState.checkout = calSelectState.checkout;
     updateUI(); saveSearchState(); closeCalPanel();
-    if (typeof updatePriceBlockStyle === "function") updatePriceBlockStyle();
-    // ДОБАВЬ ЭТУ СТРОКУ:
     if (typeof updateAllPrices === "function") updateAllPrices();
+    if (typeof updatePriceBlockStyle === "function") updatePriceBlockStyle();
 }
 
 // ═══════════════════════════════════════════════════════
