@@ -27,6 +27,7 @@
     { "src": "/details.css",      "dest": "/details.css" },
     { "src": "/script.js",        "dest": "/script.js" },
     { "src": "/search-header.js", "dest": "/search-header.js" },
+    { "src": "/hotels_data.json", "dest": "/hotels_data.json" },
     { "src": "/forapi.json",      "dest": "/server/forapi.json" },
     { "src": "/onehotel/(.*)",    "dest": "/onehotel/$1" },
     { "src": "/(.*)",             "dest": "server/server.js" }
