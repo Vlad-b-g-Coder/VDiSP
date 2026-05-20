@@ -323,7 +323,7 @@ async function loadHotelsBySearch() {
 
         // Шаблон запроса — берём прямо из forapi.json (грузим один раз)
         if (!window._searchTemplate) {
-            const tplRes = await fetch('/forapi.json');
+            const tplRes = await fetch('/server/forapi.json');
             window._searchTemplate = await tplRes.json();
         }
 
