@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Green Hotel</title>
+    <link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet">
+    <!-- главная страница -->
+    <link rel="stylesheet" href="../styleAll.css">
+    <link rel="stylesheet" href="./css/main.css">
+    <!-- фото/описание/отзывы -->
+    <link rel="stylesheet" href="../details.css">
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        .site-wrapper {
+            visibility: hidden;
+        }
+        .site-wrapper.scaled {
+            visibility: visible;
+        }
+    </style>
+    <script>
+        (function() {
+            function scaleSiteWrapper() {
+                const wrapper = document.querySelector('.site-wrapper');
+                if (!wrapper) return;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+                const blockWidth = 1080;
+                const blockHeight = 1920;
+                const scale = Math.min(windowWidth / blockWidth, windowHeight / blockHeight);
+                wrapper.style.transform = `scale(${scale})`;
+                wrapper.classList.add('scaled');
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', scaleSiteWrapper);
+            } else {
+                scaleSiteWrapper();
+            }
+            window.addEventListener('resize', scaleSiteWrapper);
+        })();
+    </script>
+</head>
+
+<body>
+<div class="site-wrapper">
+    <div id="authModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:white; padding:40px; border-radius:10px; z-index:1000; box-shadow:0 20px 60px rgba(0,0,0,0.4); width:700px; max-width:90vw; font-family:'Inter',sans-serif;">
+        <h3 id="modalTitle" style="margin:0 0 30px 0; font-size:38px; font-weight:bold; text-align:center;">Вход</h3>
+        <input type="text" id="modalLogin" placeholder="Логин" style="width:100%; margin:15px 0; padding:20px; font-size:28px; border:2px solid #ccc; border-radius:10px; box-sizing:border-box;">
+        <input type="password" id="modalPassword" placeholder="Пароль" style="width:100%; margin:15px 0; padding:20px; font-size:28px; border:2px solid #ccc; border-radius:10px; box-sizing:border-box;">
+        <input type="text" id="modalName" placeholder="Имя (опционально)" style="width:100%; margin:15px 0; padding:20px; font-size:28px; border:2px solid #ccc; border-radius:10px; box-sizing:border-box; display:none;">
+        <button id="modalSubmitBtn" style="width:100%; margin-top:30px; padding:20px; background:#2cff00; border:none; border-radius:10px; font-size:32px; font-weight:bold; cursor:pointer;">Войти</button>
+        <button id="modalToggleBtn" style="width:100%; margin-top:20px; padding:15px; background:transparent; border:none; color:#0b3d06; font-size:24px; cursor:pointer; text-decoration:none;">Нет аккаунта? Зарегистрироваться</button>
+        <button id="modalCloseBtn" style="position:absolute; top:20px; right:30px; background:transparent; border:none; font-size:38px; cursor:pointer;">&times;</button>
+    </div>
+    <div id="modalOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999;"></div>
+    <div class="v1_2">
+        <!-- бар -->
+        <div class="v1_3"></div>
+        <div class="v1_5"></div>
+        <div class="v1_13"></div>
+        <div class="vhod">
+
+            <div class="v1_6"></div>
+            <span class="v1_7">Войти</span>
+        </div>
+        <div class="lang">
+
+            <div class="v1_8"></div>
+            <span class="v1_10">RU</span>
+        </div>
+
+        <div class="menu-item">
+            <div class="v1_9"></div>
+            <span class="v1_11" id="homeLink">Home</span>
+        </div>
+
+        <div class="v5_22"></div>
+        <div class="v4_15"></div>
+
+        <!-- сёрч -->
+        <div class="v4_е"></div>
+
+
+
+
+        <div class="v4_2">
+            <span class="v4_9">Куда едем?</span>
+            <span class="city-value">Куда едем?</span>
+        </div>
+
+
+        <!--  -->
+        <div class="v4_3">
+            <span class="v4_6"></span>
+            <span class="dates-value">Даты</span>
+        </div>
+
+        <!-- Гости -->
+        <div class="v4_4">
+            <span class="v4_5">Гости</span>
+            <span class="guests-value">Гости</span>
+        </div>
+
+
+        <div class="strelka">
+            <div class="v4_11"></div>
+            <span class="v4_12">-></span>
+        </div>
+
+
+
+        <div id="dynamic-content">
+
+
+
+            <!-- фото!!! -->
+            <div class="v9_60" id="photoGallery" style="position: relative;">
+                <img id="mainPhoto" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTi2zmIoAaqK2KVm9rekX9uT74KbtvIuOEpiA&s" style="width:100%; height:100%; object-fit:cover;" alt="Отель">
+                <div class="photo-counter" id="photoCounter">1/1</div>
+
+                <div class="photo-rating-badge">
+                    <span class="stars">★★★★★</span>
+                    <span class="rating-value">4.7</span>
+                </div>
+
+                <div class="photo-nav-btn photo-prev" id="prevPhoto">‹</div>
+                <div class="photo-nav-btn photo-next" id="nextPhoto">›</div>
+            </div>
+
+            <div class="dynamic-text-box" id="dynamicTextBox">
+                <h1 id="hotelName">Название отеля</h1>
+
+                <p id="hotelDescription">
+
+                </p>
+            </div>
+
+            <div class="reviews-wrapper">
+                <span class="v9_65">Стена отзывов</span>
+                <div class="reviews-container" id="reviewsContainer">
+                    <div class="no-reviews" style="text-align:center;padding:30px;color:#999;font-style:italic;">Загрузка отзывов...</div>
+                </div>
+
+                <div class="review-form">
+                    <div class="rating-input">
+                        <span>Ваша оценка: </span>
+                        <span class="star-rating" id="starRating">
+                ★★★★★
+            </span>
+                        <input type="hidden" id="reviewRating" value="5">
+                    </div>
+                    <textarea id="reviewText" placeholder="Напишите ваш отзыв..." rows="3"></textarea>
+                    <button id="submitReview" class="submit-review-btn">Оставить отзыв</button>
+                </div>
+            </div>
+            <!-- Это цена -->
+            <div class="v9_130" id="priceBlock"></div>
+            <span class="v9_131" id="priceDisplay">Цена</span>
+        </div>
+
+    </div>
+</div>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="./js/hotel-details.js"></script>
+<script src="./js/search-header.js"></script>
+
+
+
+</body>
+</html>
