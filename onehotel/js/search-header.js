@@ -73,8 +73,8 @@ function createOverlay(id) {
     return el;
 }
 
-function showOverlay(id) { document.getElementById(id).style.display = "block"; }
-function hideOverlay(id) { document.getElementById(id).style.display = "none"; }
+function showOverlay(id) { const el = document.getElementById(id); if (el) { el.style.display = "block"; el.style.pointerEvents = "auto"; } }
+function hideOverlay(id) { const el = document.getElementById(id); if (el) { el.style.display = "none"; el.style.pointerEvents = "none"; } }
 
 // ═══════════════════════════════════════════════════════
 //  ПАНЕЛЬ ВЫБОРА ГОРОДА
@@ -91,7 +91,7 @@ function buildCityPanel() {
         display:none; position:fixed; top:50%; left:50%;
         transform:translate(-50%,-50%) scale(0.95);
         background:#fff; border-radius:10px;
-        padding:20px 22px; width:540px; max-width:92vw;
+        padding:10px 11px; width:270px; max-width:92vw;
         z-index:9000; box-shadow:0 12px 40px rgba(0,0,0,0.3);
         font-family:'Inter',sans-serif;
         transition:transform .2s ease, opacity .2s ease;
@@ -99,8 +99,8 @@ function buildCityPanel() {
     `;
 
     panel.innerHTML = `
-        <h2 style="margin:0 0 14px;font-size:26px;font-weight:700;color:#111;">Куда едем?</h2>
-        <div id="cityList" style="display:flex;flex-direction:column;gap:8px;"></div>
+        <h2 style="margin:0 0 7px;font-size:13px;font-weight:700;color:#111;">Куда едем?</h2>
+        <div id="cityList" style="display:flex;flex-direction:column;gap:4px;"></div>
     `;
 
     const list = panel.querySelector("#cityList");
@@ -108,14 +108,15 @@ function buildCityPanel() {
         const btn = document.createElement("button");
         btn.style.cssText = `
             display:flex; align-items:center; gap:12px;
-            padding:10px 14px; border-radius:6px;
+            padding:5px 7px; border-radius:6px;
             border:2px solid ${city.value === searchState.location ? '#2cff00' : '#e8e8e8'};
             background:${city.value === searchState.location ? '#f0fff0' : '#fafafa'};
-            cursor:pointer; font-size:22px; font-family:'Inter',sans-serif;
+            cursor:pointer; font-size:11px; font-family:'Inter',sans-serif;
             font-weight:600; color:#222; transition:.15s;
             width:100%; text-align:left;
         `;
-        btn.innerHTML = `<span style="font-size:36px">${city.flag}</span> ${city.label}`;
+        btn.dataset.cityValue = city.value;
+        btn.innerHTML = `<span style="font-size:18px">${city.flag}</span> ${city.label}`;
         btn.addEventListener("click", () => {
             searchState.location = city.value;
             updateUI();
@@ -139,7 +140,8 @@ function openCityPanel() {
         panel.style.opacity   = "1";
     });
     document.querySelectorAll("#cityList button").forEach(btn => {
-        const isActive = btn.textContent.trim().includes(searchState.location);
+        const cityVal = btn.dataset.cityValue;
+        const isActive = cityVal === searchState.location;
         btn.style.borderColor = isActive ? "#2cff00" : "#e8e8e8";
         btn.style.background  = isActive ? "#f0fff0"  : "#fafafa";
     });
@@ -151,7 +153,7 @@ function closeCityPanel() {
     if (panel) {
         panel.style.transform = "translate(-50%,-50%) scale(0.95)";
         panel.style.opacity   = "0";
-        setTimeout(() => { panel.style.display = "none"; }, 200);
+        panel.style.display   = "none";
     }
 }
 
@@ -172,30 +174,30 @@ function buildCalendarPanel() {
         display:none; position:fixed; top:50%; left:50%;
         transform:translate(-50%,-50%) scale(0.95); opacity:0;
         background:#fff; border-radius:10px;
-        padding:18px 20px 16px; width:640px; max-width:96vw;
+        padding:9px 10px 8px; width:320px; max-width:96vw;
         z-index:9000; box-shadow:0 12px 40px rgba(0,0,0,0.3);
         font-family:'Inter',sans-serif;
         transition:transform .2s ease, opacity .2s ease;
     `;
     panel.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <h2 id="calTitle" style="margin:0;font-size:22px;font-weight:700;color:#111;">Выберите даты</h2>
-            <button id="calCloseBtn" style="background:none;border:none;font-size:28px;cursor:pointer;color:#555;">&times;</button>
+            <h2 id="calTitle" style="margin:0;font-size:11px;font-weight:700;color:#111;">Выберите даты</h2>
+            <button id="calCloseBtn" style="background:none;border:none;font-size:14px;cursor:pointer;color:#555;">&times;</button>
         </div>
         <div id="calSelectedDates" style="display:flex;gap:10px;margin-bottom:14px;">
-            <div id="calCheckinLabel"  title="ПКМ — сбросить дату" style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;cursor:context-menu;"></div>
-            <div id="calCheckoutLabel" title="ПКМ — сбросить дату" style="flex:1;padding:8px 12px;border-radius:6px;border:2px solid #e0e0e0;font-size:18px;color:#444;cursor:context-menu;"></div>
+            <div id="calCheckinLabel"  title="ПКМ — сбросить дату" style="flex:1;padding:4px 6px;border-radius:6px;border:2px solid #e0e0e0;font-size:9px;color:#444;cursor:context-menu;"></div>
+            <div id="calCheckoutLabel" title="ПКМ — сбросить дату" style="flex:1;padding:4px 6px;border-radius:6px;border:2px solid #e0e0e0;font-size:9px;color:#444;cursor:context-menu;"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-            <button id="calPrev" style="background:none;border:none;font-size:26px;cursor:pointer;padding:4px 10px;border-radius:6px;color:#333;">&#8249;</button>
-            <span id="calMonthLabel" style="font-size:20px;font-weight:600;"></span>
-            <button id="calNext" style="background:none;border:none;font-size:26px;cursor:pointer;padding:4px 10px;border-radius:6px;color:#333;">&#8250;</button>
+            <button id="calPrev" style="background:none;border:none;font-size:13px;cursor:pointer;padding:2px 5px;border-radius:6px;color:#333;">&#8249;</button>
+            <span id="calMonthLabel" style="font-size:10px;font-weight:600;"></span>
+            <button id="calNext" style="background:none;border:none;font-size:13px;cursor:pointer;padding:2px 5px;border-radius:6px;color:#333;">&#8250;</button>
         </div>
-        <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;"></div>
+        <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;"></div>
         <button id="calConfirmBtn" style="
-            width:100%;margin-top:12px;padding:12px;
+            width:100%;margin-top:6px;padding:6px;
             background:linear-gradient(90deg,#2cff00,#0b3d06);
-            border:none;border-radius:6px;font-size:22px;
+            border:none;border-radius:6px;font-size:11px;
             font-weight:700;color:#072307;cursor:pointer;
             opacity:0.4;pointer-events:none;transition:.2s;
         ">Выбрать</button>
@@ -227,7 +229,8 @@ function openCalPanel() {
     const now = new Date(searchState.checkin + "T00:00:00");
     calMonth = now.getMonth();
     calYear  = now.getFullYear();
-    calSelectState = { step: "checkin", checkin: searchState.checkin, checkout: searchState.checkout };
+    const hasBoth = !!(searchState.checkin && searchState.checkout);
+    calSelectState = { step: hasBoth ? "checkin" : "checkin", checkin: searchState.checkin || null, checkout: searchState.checkout || null };
     showOverlay("calOverlay");
     const panel = document.getElementById("calPanel");
     panel.style.display = "block";
@@ -245,7 +248,7 @@ function closeCalPanel() {
     if (panel) {
         panel.style.transform = "translate(-50%,-50%) scale(0.95)";
         panel.style.opacity   = "0";
-        setTimeout(() => { panel.style.display = "none"; }, 200);
+        panel.style.display   = "none";
     }
 }
 
@@ -273,7 +276,7 @@ function renderCal() {
     ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"].forEach(d => {
         const h = document.createElement("div");
         h.textContent = d;
-        h.style.cssText = "text-align:center;font-size:20px;font-weight:600;color:#888;padding:6px 0;";
+        h.style.cssText = "text-align:center;font-size:10px;font-weight:600;color:#888;padding:3px 0;";
         grid.appendChild(h);
     });
     const firstDay = new Date(calYear, calMonth, 1);
@@ -296,7 +299,7 @@ function renderCal() {
         if (isCheckin || isCheckout) { bg = "linear-gradient(135deg,#2cff00,#0b8a00)"; color = "#072307"; border = "none"; }
         else if (isInRange)          { bg = "#d4ffcf"; border = "1px solid #a8e8a0"; }
         if (isPast) color = "#ccc";
-        cell.style.cssText = `background:${bg};color:${color};border:${border};border-radius:10px;padding:10px 0;font-size:22px;cursor:${isPast?"not-allowed":"pointer"};font-family:'Inter',sans-serif;font-weight:500;transition:.12s;`;
+        cell.style.cssText = `background:${bg};color:${color};border:${border};border-radius:5px;padding:5px 0;font-size:11px;cursor:${isPast?"not-allowed":"pointer"};font-family:'Inter',sans-serif;font-weight:500;transition:.12s;`;
         cell.textContent = d;
         cell.disabled    = isPast;
         cell.addEventListener("click", () => {
@@ -404,7 +407,7 @@ function closeGuestsPanel() {
     if (panel) {
         panel.style.transform = "translate(-50%,-50%) scale(0.95)";
         panel.style.opacity   = "0";
-        setTimeout(() => { panel.style.display = "none"; }, 200);
+        panel.style.display   = "none";
     }
 }
 
