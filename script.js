@@ -75,22 +75,29 @@ function createHotelCard(hotel, globalIndex) {
     }
     hotelCard.appendChild(imgWrapper);
 
-    // Название — фон-прямоугольник (соприкасается с низом фото, чуть выше фото снизу)
+    // Название — фон-прямоугольник (соприкасается с низом фото, закруглён со всех сторон)
     const nameBg = document.createElement('div');
-    // Фото: top:42, height:200 → низ фото = 242px
-    // Прямоугольник: от 242px вниз до ~345px (закрывает зону названия и цены)
+    // Фото: top:42, height:200 → низ фото = 242px; карточка height:350 → прямоугольник до низа = 108px
     nameBg.style.cssText = `
         position:absolute;left:0;top:242px;
-        width:430px;height:103px;
+        width:430px;height:108px;
         background:rgba(255,255,255,0.93);
-        border-radius:0 0 12px 12px;
+        border-radius:12px;
         box-shadow:0 -2px 8px rgba(0,0,0,0.07);
     `;
     hotelCard.appendChild(nameBg);
 
-    // Название
+    // Название — перенос строк, не вылезать за прямоугольник и не залезать под кнопку цены
     const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = 'position:absolute;left:60px;top:255px;font-weight:bold;font-size:25px;color:#333;z-index:2;';
+    nameSpan.style.cssText = `
+        position:absolute;left:12px;top:250px;
+        width:248px;
+        max-height:90px;
+        font-weight:bold;font-size:22px;line-height:1.25;color:#333;z-index:2;
+        overflow:hidden;
+        display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+        word-break:break-word;
+    `;
     nameSpan.innerText = hotel.displayName?.text || 'Без названия';
     hotelCard.appendChild(nameSpan);
 
@@ -300,9 +307,15 @@ async function loadHotelsBySearch() {
 window.loadHotelsBySearch = loadHotelsBySearch;
 
 // ── Карусель обоев на v4_15 ──────────────────────────────────────────────────
+let _carouselTimer = null;
+
 function initHeroCarousel() {
     const el = document.querySelector('.v4_15');
     if (!el || allHotels.length === 0) return;
+
+    // Останавливаем старый таймер и чистим содержимое
+    if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
+    el.innerHTML = '';
 
     // Берём до 8 случайных отелей с фото
     const pool = allHotels
@@ -392,11 +405,11 @@ function initHeroCarousel() {
     }
 
     // Автопрокрутка каждые 3 сек
-    let timer = setInterval(() => goTo((current + 1) % pool.length), 3000);
+    _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
 
     // Клик — переход на отель
     el.addEventListener('click', () => {
-        clearInterval(timer);
+        clearInterval(_carouselTimer);
         handleHotelSelect(pool[current].hotel, pool[current].index);
     });
 
@@ -406,12 +419,12 @@ function initHeroCarousel() {
     el.addEventListener('pointerup', e => {
         const dx = e.clientX - touchStartX;
         if (Math.abs(dx) > 30) {
-            clearInterval(timer);
+            clearInterval(_carouselTimer);
             goTo(dx < 0
                 ? (current + 1) % pool.length
                 : (current - 1 + pool.length) % pool.length
             );
-            timer = setInterval(() => goTo((current + 1) % pool.length), 3000);
+            _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
         }
     });
 }
