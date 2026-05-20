@@ -1205,7 +1205,7 @@ function initCurrencyLabel() {
         transform:translate(-50%,-50%);
         color:#fff;
         font-family:'Inter',sans-serif;
-        font-size:18px;
+        font-size:30px;
         font-weight:700;
         cursor:pointer;
         letter-spacing:0.5px;
