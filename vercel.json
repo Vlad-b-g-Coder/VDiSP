@@ -3,56 +3,31 @@
   "builds": [
     {
       "src": "server/server.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "**/*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "**/*.js",
-      "use": "@vercel/static",
+      "use": "@vercel/node",
       "config": {
-        "exclude": ["server/**"]
+        "includeFiles": ["server/forapi.json"]
       }
     },
     {
-      "src": "**/*.html",
+      "src": "**/*.{css,html}",
       "use": "@vercel/static"
     },
     {
       "src": "onehotel/**",
       "use": "@vercel/static"
+    },
+    {
+      "src": "*.js",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/styles.css",
-      "dest": "/styles.css"
-    },
-    {
-      "src": "/styleAll.css",
-      "dest": "/styleAll.css"
-    },
-    {
-      "src": "/details.css",
-      "dest": "/details.css"
-    },
-    {
-      "src": "/script.js",
-      "dest": "/script.js"
-    },
-    {
-      "src": "/search-header.js",
-      "dest": "/search-header.js"
-    },
-    {
-      "src": "/onehotel/(.*)",
-      "dest": "/onehotel/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "server/server.js"
-    }
+    { "src": "/styles.css",       "dest": "/styles.css" },
+    { "src": "/styleAll.css",     "dest": "/styleAll.css" },
+    { "src": "/details.css",      "dest": "/details.css" },
+    { "src": "/script.js",        "dest": "/script.js" },
+    { "src": "/search-header.js", "dest": "/search-header.js" },
+    { "src": "/onehotel/(.*)",    "dest": "/onehotel/$1" },
+    { "src": "/(.*)",             "dest": "server/server.js" }
   ]
 }
