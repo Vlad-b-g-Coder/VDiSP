@@ -500,8 +500,8 @@ function buildAuthPanel() {
         if (!login || !password) { errEl.textContent = "Заполните логин и пароль"; return; }
 
         const url  = isLogin
-            ? "http://localhost:3000/api/auth/login"
-            : "http://localhost:3000/api/auth/register";
+            ? "/api/auth/login"
+            : "/api/auth/register";
         const body = isLogin
             ? { login, password }
             : { login, password, name: name || login, first_name, last_name };
@@ -590,7 +590,7 @@ function updateAuthButton() {
 function initiateGoogleAuth() {
     const hasGoogleEndpoint = false;
     if (hasGoogleEndpoint) {
-        const popup = window.open("http://localhost:3000/auth/google", "googleAuth", "width=500,height=600");
+        const popup = window.open("/auth/google", "googleAuth", "width=500,height=600");
         window.addEventListener("message", function handler(e) {
             if (e.data?.type === "google-auth-success") {
                 setLoggedInUser(e.data.user);
@@ -626,7 +626,7 @@ async function handleGoogleCredential(response) {
         const first_name = payload.given_name  || '';
         const last_name  = payload.family_name || '';
 
-        const res = await fetch("http://localhost:3000/api/user/by-name", {
+        const res = await fetch("/api/user/by-name", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name: login })
@@ -744,7 +744,7 @@ function buildProfilePanel() {
         if (!first_name && !last_name) { msg.textContent = "Введите имя или фамилию"; msg.style.color = "#c00"; return; }
 
         try {
-            const res = await fetch(`http://localhost:3000/api/user/${window.currentUser.id}/name`, {
+            const res = await fetch(`/api/user/${window.currentUser.id}/name`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ first_name, last_name })
@@ -809,7 +809,7 @@ async function loadProfileBookings() {
     const container = document.getElementById("profileBookings");
     if (!container || !window.currentUser) return;
     try {
-        const res = await fetch(`http://localhost:3000/api/bookings/user/${window.currentUser.id}`);
+        const res = await fetch(`/api/bookings/user/${window.currentUser.id}`);
         if (res.ok) {
             const bookings = await res.json();
             renderProfileBookings(bookings, container);

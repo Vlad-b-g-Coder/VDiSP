@@ -76,7 +76,7 @@ function loadHotelData() {
 
 async function fetchHotelFromServer(hotelId) {
     try {
-        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}`);
+        const response = await fetch(`/api/hotels/${hotelId}`);
         if (!response.ok) throw new Error('Отель не найден');
         const data = await response.json();
         renderHotelData(data);
@@ -249,7 +249,7 @@ async function loadReviews() {
         return;
     }
     try {
-        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}/reviews`);
+        const response = await fetch(`/api/hotels/${hotelId}/reviews`);
         if (response.ok) {
             const reviews = await response.json();
             displayReviews(reviews);
@@ -297,7 +297,7 @@ async function submitReview(hotelId, userId, rating, text) {
         return false;
     }
     try {
-        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}/reviews`, {
+        const response = await fetch(`/api/hotels/${hotelId}/reviews`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, rating, text })
@@ -360,7 +360,7 @@ function initReviewForm() {
 
 async function checkBookingStatus(hotelId, checkin, checkout) {
     try {
-        const res = await fetch(`http://localhost:3000/api/hotels/${hotelId}/booking-status?checkin=${checkin}&checkout=${checkout}`);
+        const res = await fetch(`/api/hotels/${hotelId}/booking-status?checkin=${checkin}&checkout=${checkout}`);
         const data = await res.json();
         return data.booked;
     } catch (e) {
@@ -425,7 +425,7 @@ async function bookNow() {
         return;
     }
     try {
-        const response = await fetch('http://localhost:3000/api/book', {
+        const response = await fetch('/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
