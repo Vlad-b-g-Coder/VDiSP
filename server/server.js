@@ -367,7 +367,7 @@ app.get('/api/bookings/user/:userId', (req, res) => {
 async function startServer() {
     await loadSearchTemplate();
     migrateUsersTable(); // добавляет first_name/last_name если колонок нет
-    app.listen(3000, () => {
+    app.listen(process.env.PORT || 3000, () => {
         console.log('');
         console.log('✅ Сервер запущен!');
         console.log('🌐 Откройте: http://localhost:3000');
