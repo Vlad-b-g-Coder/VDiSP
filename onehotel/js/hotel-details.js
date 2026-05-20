@@ -192,7 +192,7 @@ function getHotelDescription(hotelData, basicData) {
     if (district) parts.push(`Район: ${district}`);
     if (city) parts.push(`Город: ${city}`);
     if (distance) parts.push(`До центра: ${distance}`);
-    if (price) parts.push(`Цена: ${Math.round(price.amount)} ${price.currency}`);
+    if (price) parts.push(`Цена за день: ${Math.round(price.amount)} ${price.currency}`);
     if (discount) parts.push(discount);
     if (taxes) parts.push(taxes);
     if (policies.showFreeCancellation) parts.push('Бесплатная отмена');
