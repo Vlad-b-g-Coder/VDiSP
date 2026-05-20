@@ -2,6 +2,138 @@
    search-header.js  — с поддержкой Фамилии и Имени
    ===================================================== */
 
+// ═══════════════════════════════════════════════════════
+//  КОНСТАНТЫ — i18n, валюты (должны быть первыми!)
+// ═══════════════════════════════════════════════════════
+const I18N = {
+    RU: {
+        loginBtn:        "Войти",
+        home:            "Home",
+        whereGo:         "Куда едем?",
+        dates:           "Даты",
+        guests:          "Гости",
+        guestsCount:     (n) => `Гостей: ${n}`,
+        cityPanelTitle:  "Куда едем?",
+        calTitle:        "Выберите даты",
+        calCheckin:      "Дата заезда",
+        calCheckout:     "Дата выезда",
+        calSelectCheckin:"Выберите заезд",
+        calSelectCheckout:"Выберите выезд",
+        calCheckInLabel: (d) => "Заезд: " + d,
+        calCheckOutLabel:(d) => "Выезд: " + d,
+        calConfirm:      "Выбрать",
+        guestsTitle:     "Гости",
+        guestsAdults:    "Взрослые",
+        guestsConfirm:   "Готово",
+        authTitle:       "Вход",
+        authRegTitle:    "Регистрация",
+        authLoginPlaceholder: "Логин",
+        authPassPlaceholder:  "Пароль",
+        authNamePlaceholder:  "Никнейм (опционально)",
+        authFirstPlaceholder: "Имя",
+        authLastPlaceholder:  "Фамилия",
+        authGoogleBtn:   "Войти через Google",
+        authSubmitLogin: "Войти",
+        authSubmitReg:   "Зарегистрироваться",
+        authToggleReg:   "Нет аккаунта? Зарегистрироваться",
+        authToggleLogin: "Уже есть аккаунт? Войти",
+        profileBookings: "Мои бронирования",
+        profileLogout:   "Выйти из аккаунта",
+        profileSave:     "Сохранить",
+        noHotels:        (city) => `Отели не найдены для города «${city}»`,
+        loadingHotels:   "Загружаем отели...",
+        allLoaded:       "Все отели загружены",
+        loading:         "Загрузка...",
+        noPrice:         "Цена не указана",
+    },
+    EN: {
+        loginBtn:        "Login",
+        home:            "Home",
+        whereGo:         "Where to?",
+        dates:           "Dates",
+        guests:          "Guests",
+        guestsCount:     (n) => `Guests: ${n}`,
+        cityPanelTitle:  "Where to?",
+        calTitle:        "Select dates",
+        calCheckin:      "Check-in date",
+        calCheckout:     "Check-out date",
+        calSelectCheckin: "Select check-in",
+        calSelectCheckout:"Select check-out",
+        calCheckInLabel: (d) => "Check-in: " + d,
+        calCheckOutLabel:(d) => "Check-out: " + d,
+        calConfirm:      "Select",
+        guestsTitle:     "Guests",
+        guestsAdults:    "Adults",
+        guestsConfirm:   "Done",
+        authTitle:       "Login",
+        authRegTitle:    "Register",
+        authLoginPlaceholder: "Login",
+        authPassPlaceholder:  "Password",
+        authNamePlaceholder:  "Nickname (optional)",
+        authFirstPlaceholder: "First name",
+        authLastPlaceholder:  "Last name",
+        authGoogleBtn:   "Sign in with Google",
+        authSubmitLogin: "Login",
+        authSubmitReg:   "Register",
+        authToggleReg:   "No account? Register",
+        authToggleLogin: "Already have an account? Login",
+        profileBookings: "My bookings",
+        profileLogout:   "Sign out",
+        profileSave:     "Save",
+        noHotels:        (city) => `No hotels found for "${city}"`,
+        loadingHotels:   "Loading hotels...",
+        allLoaded:       "All hotels loaded",
+        loading:         "Loading...",
+        noPrice:         "Price not available",
+    }
+};
+
+window.currentLang = localStorage.getItem("siteLang") || "RU";
+
+function t(key, ...args) {
+    const dict = I18N[window.currentLang] || I18N["RU"];
+    const val  = dict[key];
+    if (typeof val === "function") return val(...args);
+    return val || key;
+}
+window.t = t;
+
+const CURRENCIES = [
+    { code: "EUR", symbol: "€",   label: "Евро"    },
+    { code: "USD", symbol: "$",   label: "Доллар"  },
+    { code: "GBP", symbol: "£",   label: "Фунт"    },
+    { code: "RUB", symbol: "₽",   label: "Рубль"   },
+    { code: "CZK", symbol: "Kč",  label: "Крона"   },
+    { code: "TRY", symbol: "₺",   label: "Лира"    },
+    { code: "JPY", symbol: "¥",   label: "Иена"    },
+    { code: "AED", symbol: "د.إ", label: "Дирхам"  },
+];
+
+const EXCHANGE_RATES = {
+    EUR: 1,
+    USD: 1.09,
+    GBP: 0.86,
+    RUB: 99.5,
+    CZK: 25.2,
+    TRY: 35.8,
+    JPY: 163.0,
+    AED: 4.0,
+};
+
+window.currentCurrency = localStorage.getItem("siteCurrency") || "EUR";
+
+function convertPrice(amountEUR) {
+    if (!amountEUR) return null;
+    const rate = EXCHANGE_RATES[window.currentCurrency] || 1;
+    return Math.round(amountEUR * rate);
+}
+window.convertPrice = convertPrice;
+
+function getCurrencySymbol() {
+    return CURRENCIES.find(c => c.code === window.currentCurrency)?.symbol || window.currentCurrency;
+}
+window.getCurrencySymbol = getCurrencySymbol;
+
 // ── Состояние поиска ──────────────────────────────────
 const searchState = {
     location: "Афины",
@@ -875,98 +1007,6 @@ function renderProfileBookings(bookings, container) {
 // ═══════════════════════════════════════════════════════
 //  i18n — ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА (RU / EN)
 // ═══════════════════════════════════════════════════════
-const I18N = {
-    RU: {
-        loginBtn:        "Войти",
-        home:            "Home",
-        whereGo:         "Куда едем?",
-        dates:           "Даты",
-        guests:          "Гости",
-        guestsCount:     (n) => `Гостей: ${n}`,
-        cityPanelTitle:  "Куда едем?",
-        calTitle:        "Выберите даты",
-        calCheckin:      "Дата заезда",
-        calCheckout:     "Дата выезда",
-        calSelectCheckin:"Выберите заезд",
-        calSelectCheckout:"Выберите выезд",
-        calCheckInLabel: (d) => "Заезд: " + d,
-        calCheckOutLabel:(d) => "Выезд: " + d,
-        calConfirm:      "Выбрать",
-        guestsTitle:     "Гости",
-        guestsAdults:    "Взрослые",
-        guestsConfirm:   "Готово",
-        authTitle:       "Вход",
-        authRegTitle:    "Регистрация",
-        authLoginPlaceholder: "Логин",
-        authPassPlaceholder:  "Пароль",
-        authNamePlaceholder:  "Никнейм (опционально)",
-        authFirstPlaceholder: "Имя",
-        authLastPlaceholder:  "Фамилия",
-        authGoogleBtn:   "Войти через Google",
-        authSubmitLogin: "Войти",
-        authSubmitReg:   "Зарегистрироваться",
-        authToggleReg:   "Нет аккаунта? Зарегистрироваться",
-        authToggleLogin: "Уже есть аккаунт? Войти",
-        profileBookings: "Мои бронирования",
-        profileLogout:   "Выйти из аккаунта",
-        profileSave:     "Сохранить",
-        noHotels:        (city) => `Отели не найдены для города «${city}»`,
-        loadingHotels:   "Загружаем отели...",
-        allLoaded:       "Все отели загружены",
-        loading:         "Загрузка...",
-        noPrice:         "Цена не указана",
-    },
-    EN: {
-        loginBtn:        "Login",
-        home:            "Home",
-        whereGo:         "Where to?",
-        dates:           "Dates",
-        guests:          "Guests",
-        guestsCount:     (n) => `Guests: ${n}`,
-        cityPanelTitle:  "Where to?",
-        calTitle:        "Select dates",
-        calCheckin:      "Check-in date",
-        calCheckout:     "Check-out date",
-        calSelectCheckin: "Select check-in",
-        calSelectCheckout:"Select check-out",
-        calCheckInLabel: (d) => "Check-in: " + d,
-        calCheckOutLabel:(d) => "Check-out: " + d,
-        calConfirm:      "Select",
-        guestsTitle:     "Guests",
-        guestsAdults:    "Adults",
-        guestsConfirm:   "Done",
-        authTitle:       "Login",
-        authRegTitle:    "Register",
-        authLoginPlaceholder: "Login",
-        authPassPlaceholder:  "Password",
-        authNamePlaceholder:  "Nickname (optional)",
-        authFirstPlaceholder: "First name",
-        authLastPlaceholder:  "Last name",
-        authGoogleBtn:   "Sign in with Google",
-        authSubmitLogin: "Login",
-        authSubmitReg:   "Register",
-        authToggleReg:   "No account? Register",
-        authToggleLogin: "Already have an account? Login",
-        profileBookings: "My bookings",
-        profileLogout:   "Sign out",
-        profileSave:     "Save",
-        noHotels:        (city) => `No hotels found for "${city}"`,
-        loadingHotels:   "Loading hotels...",
-        allLoaded:       "All hotels loaded",
-        loading:         "Loading...",
-        noPrice:         "Price not available",
-    }
-};
-
-window.currentLang = localStorage.getItem("siteLang") || "RU";
-
-function t(key, ...args) {
-    const dict = I18N[window.currentLang] || I18N["RU"];
-    const val  = dict[key];
-    if (typeof val === "function") return val(...args);
-    return val || key;
-}
-window.t = t;
 
 function applyLang() {
     const lang = window.currentLang;
@@ -1066,41 +1106,6 @@ function closeLangPanel() {
 // ═══════════════════════════════════════════════════════
 //  СМЕНА ВАЛЮТЫ — на v1_5
 // ═══════════════════════════════════════════════════════
-const CURRENCIES = [
-    { code: "EUR", symbol: "€", label: "Евро"      },
-    { code: "USD", symbol: "$", label: "Доллар"    },
-    { code: "GBP", symbol: "£", label: "Фунт"      },
-    { code: "RUB", symbol: "₽", label: "Рубль"     },
-    { code: "CZK", symbol: "Kč",label: "Крона"     },
-    { code: "TRY", symbol: "₺", label: "Лира"      },
-    { code: "JPY", symbol: "¥", label: "Иена"      },
-    { code: "AED", symbol: "د.إ",label: "Дирхам"   },
-];
-
-const EXCHANGE_RATES = {
-    EUR: 1,
-    USD: 1.09,
-    GBP: 0.86,
-    RUB: 99.5,
-    CZK: 25.2,
-    TRY: 35.8,
-    JPY: 163.0,
-    AED: 4.0,
-};
-
-window.currentCurrency = localStorage.getItem("siteCurrency") || "EUR";
-
-function convertPrice(amountEUR) {
-    if (!amountEUR) return null;
-    const rate = EXCHANGE_RATES[window.currentCurrency] || 1;
-    return Math.round(amountEUR * rate);
-}
-window.convertPrice = convertPrice;
-
-function getCurrencySymbol() {
-    return CURRENCIES.find(c => c.code === window.currentCurrency)?.symbol || window.currentCurrency;
-}
-window.getCurrencySymbol = getCurrencySymbol;
 
 function buildCurrencyPanel() {
     if (document.getElementById("currencyPanel")) return;

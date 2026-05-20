@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "alias": ["green-hotel-vlad.vercel.app"],
   "builds": [
     {
       "src": "server/server.js",
