@@ -293,7 +293,6 @@ async function loadHotelsBySearch() {
     const checkout = state.checkout || "2026-06-15";
     const adults   = state.adults   || 2;
 
-    // Сброс
     allHotels    = [];
     currentIndex = 0;
     hasMore      = true;
@@ -306,44 +305,71 @@ async function loadHotelsBySearch() {
     if (!loader) {
         loader = document.createElement("div");
         loader.id = "loader";
-        loader.style.position = "fixed";
-        loader.style.bottom = "20px";
-        loader.style.left = "50%";
-        loader.style.transform = "translateX(-50%)";
-        loader.style.backgroundColor = "#333";
-        loader.style.color = "white";
-        loader.style.padding = "10px 20px";
-        loader.style.borderRadius = "20px";
-        loader.style.zIndex = "1000";
-        loader.style.fontSize = "14px";
+        loader.style.cssText = "position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;z-index:1000;font-size:14px;";
         document.body.appendChild(loader);
     }
     loader.style.display = "block";
     loader.innerText = "Ищем отели...";
 
     try {
-        const res = await fetch("/api/search", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ location, checkin, checkout, adults })
+        const cityToDestId = {
+            'рим': -126693, 'rome': -126693,
+            'афины': -814876, 'athens': -814876,
+            'афина': -814876, 'athen': -814876
+        };
+
+        const destId = cityToDestId[location.toLowerCase().trim()];
+        if (!destId) throw new Error(`Город "${location}" не поддерживается`);
+
+        // Шаблон запроса — берём прямо из forapi.json (грузим один раз)
+        if (!window._searchTemplate) {
+            const tplRes = await fetch('/forapi.json');
+            window._searchTemplate = await tplRes.json();
+        }
+
+        const requestBody = JSON.parse(JSON.stringify(window._searchTemplate));
+        requestBody.variables.input.location.searchString = location;
+        requestBody.variables.input.location.destId = destId;
+        requestBody.variables.input.dates.checkin = checkin;
+        requestBody.variables.input.dates.checkout = checkout;
+        requestBody.variables.input.flexibleDatesConfig.dateRangeCalendar.checkin = [checkin];
+        requestBody.variables.input.flexibleDatesConfig.dateRangeCalendar.checkout = [checkout];
+        requestBody.variables.input.nbAdults = parseInt(adults);
+
+        // Запрос идёт с браузера пользователя — не с сервера!
+        const res = await fetch('https://www.booking.com/dml/graphql', {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json',
+                'accept': 'application/json',
+                'accept-language': 'ru-RU,ru;q=0.9',
+                'apollographql-client-name': 'b-search-web-searchresults',
+                'origin': 'https://www.booking.com',
+                'referer': 'https://www.booking.com/searchresults.ru.html'
+            },
+            body: JSON.stringify(requestBody)
         });
 
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`Booking.com: HTTP ${res.status}`);
         const data = await res.json();
 
-        allHotels = Array.isArray(data) ? data : (data.hotels || []);
+        allHotels = data?.data?.searchQueries?.search?.results
+            || data?.data?.search?.results
+            || [];
+
+        // Сохраняем на сервер чтобы /api/hotels/:id работал
+        if (allHotels.length > 0) {
+            fetch('/api/search/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(allHotels)
+            }).catch(() => {});
+        }
+
         loader.style.display = "none";
 
         if (allHotels.length === 0) {
-            if (container) {
-                container.innerHTML = `<div style="
-                    position:absolute; top:100px; left:50%;
-                    transform:translateX(-50%);
-                    font-size:28px; color:#888;
-                    font-family:'Inter',sans-serif;
-                    text-align:center;
-                ">Отели не найдены</div>`;
-            }
+            if (container) container.innerHTML = `<div style="position:absolute;top:100px;left:50%;transform:translateX(-50%);font-size:28px;color:#888;font-family:'Inter',sans-serif;text-align:center;">Отели не найдены</div>`;
             return;
         }
 

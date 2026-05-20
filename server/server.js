@@ -56,43 +56,13 @@ const cityToDestId = {
     'athen': -814876
 };
 
-app.post('/api/search', async (req, res) => {
+// server.js - /api/search теперь просто принимает результаты от клиента
+app.post('/api/search/save', async (req, res) => {
     try {
-        if (!searchTemplate) return res.status(500).json({ error: 'Шаблон поиска не загружен' });
-        const { location, checkin, checkout, adults } = req.body;
-        if (!location || !checkin || !checkout || !adults)
-            return res.status(400).json({ error: 'Не хватает параметров поиска' });
-
-        const destId = cityToDestId[location.toLowerCase().trim()];
-        if (!destId) return res.status(400).json({ error: `Город "${location}" не поддерживается. Используйте: Афины, Рим` });
-
-        const requestBody = JSON.parse(JSON.stringify(searchTemplate));
-        requestBody.variables.input.location.searchString = location;
-        requestBody.variables.input.location.destId = destId;
-        requestBody.variables.input.dates.checkin = checkin;
-        requestBody.variables.input.dates.checkout = checkout;
-        requestBody.variables.input.nbAdults = parseInt(adults);
-
-        const response = await fetch('https://www.booking.com/dml/graphql', {
-            method: 'POST',
-            headers: {
-                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                'content-type': 'application/json',
-                'accept': 'application/json',
-                'accept-language': 'ru-RU,ru;q=0.9',
-                'apollographql-client-name': 'b-search-web-searchresults',
-                'origin': 'https://www.booking.com',
-                'referer': 'https://www.booking.com/searchresults.ru.html'
-            },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!response.ok) return res.status(502).json({ error: `Booking.com вернул ошибку: ${response.status}` });
-
-        const data = await response.json();
-        let hotels = data?.data?.searchQueries?.search?.results || data?.data?.search?.results || [];
+        const hotels = req.body;
+        if (!Array.isArray(hotels)) return res.status(400).json({ error: 'Ожидается массив' });
         lastSearchResults = hotels.map((hotel, idx) => ({ ...hotel, searchIndex: idx }));
-        res.json(hotels);
+        res.json({ ok: true, count: hotels.length });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
