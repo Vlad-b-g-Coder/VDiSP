@@ -26,7 +26,6 @@ app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
 });
 
 let lastSearchResults = null;
-let searchTemplate = null;
 const XOR_KEY = 'IliaTakeZaradku';
 
 function xorEncrypt(text, key) {
@@ -37,95 +36,47 @@ function xorEncrypt(text, key) {
     return result;
 }
 
-async function loadSearchTemplate() {
-    try {
-        const templatePath = path.join(__dirname, 'forapi.json');
-        const raw = await fs.readFile(templatePath, 'utf-8');
-        searchTemplate = JSON.parse(raw);
-        console.log('✅ Шаблон forapi.json загружен');
-    } catch (err) {
-        console.error('❌ Ошибка загрузки forapi.json:', err.message);
-        process.exit(1);
-    }
-}
 
-const cityToDestId = {
-    'рим': -126693, 'rome': -126693,
-    'афины': -814876, 'athens': -814876,
-    'афина': -814876,
-    'athen': -814876
-};
+// /api/search — проксируем запрос к локальному скраперу (local-scraper.js)
+// Скрапер запускается отдельно: node local-scraper.js
+// URL скрапера задаётся через .env: SCRAPER_URL=http://localhost:3001
+const SCRAPER_URL = process.env.SCRAPER_URL || 'http://localhost:3001';
 
-// server.js - /api/search теперь просто принимает результаты от клиента
-// server.js - добавляем старый /api/search с диагностикой
-
-// Добавьте это в server.js перед остальными маршрутами
 app.post('/api/search', async (req, res) => {
     try {
         const { location, checkin, checkout, adults } = req.body;
+        console.log('🔍 /api/search → local-scraper:', { location, checkin, checkout, adults });
 
-        console.log('🔍 /api/search called:', { location, checkin, checkout, adults });
-
-        const cityToDestId = {
-            'рим': -126693, 'rome': -126693,
-            'афины': -814876, 'athens': -814876,
-            'афина': -814876, 'athen': -814876
-        };
-
-        const destId = cityToDestId[location?.toLowerCase().trim()];
-        if (!destId) {
-            return res.status(400).json({ error: `Город "${location}" не поддерживается` });
-        }
-
-        // Загружаем шаблон если ещё не загружен
-        if (!searchTemplate) {
-            await loadSearchTemplate();
-        }
-
-        const requestBody = JSON.parse(JSON.stringify(searchTemplate));
-        requestBody.variables.input.location.searchString = location;
-        requestBody.variables.input.location.destId = destId;
-        requestBody.variables.input.dates.checkin = checkin;
-        requestBody.variables.input.dates.checkout = checkout;
-        requestBody.variables.input.nbAdults = parseInt(adults) || 2;
-
-        const response = await fetch('https://www.booking.com/dml/graphql', {
+        const response = await fetch(`${SCRAPER_URL}/api/search`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'Accept-Language': 'ru-RU,ru;q=0.9',
-                'apollographql-client-name': 'b-search-web-searchresults',
-                'Origin': 'https://www.booking.com',
-                'Referer': 'https://www.booking.com/searchresults.ru.html',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            },
-            body: JSON.stringify(requestBody)
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ location, checkin, checkout, adults })
         });
 
-        const rawText = await response.text();
-        console.log('📡 Booking.com status:', response.status);
-        console.log('📄 Body preview:', rawText.slice(0, 500));
+        const data = await response.json();
 
         if (!response.ok) {
-            return res.status(response.status).json({
-                error: `Booking.com error ${response.status}`,
-                bodyPreview: rawText.slice(0, 200)
-            });
+            return res.status(response.status).json(data);
         }
 
-        const data = JSON.parse(rawText);
-        const hotels = data?.data?.searchQueries?.search?.results || data?.data?.search?.results || [];
+        const hotels = data.hotels || [];
 
         // Сохраняем для /api/hotels/:id
         if (hotels.length > 0) {
             lastSearchResults = hotels.map((hotel, idx) => ({ ...hotel, searchIndex: idx }));
         }
 
-        res.json({ success: true, count: hotels.length, hotels: hotels });
+        res.json({ success: true, count: hotels.length, hotels });
 
     } catch (err) {
-        console.error('❌ /api/search error:', err);
+        console.error('❌ /api/search error:', err.message);
+
+        // Если скрапер недоступен — понятное сообщение
+        if (err.code === 'ECONNREFUSED') {
+            return res.status(503).json({
+                error: `Локальный скрапер недоступен (${SCRAPER_URL}). Запустите: node local-scraper.js`
+            });
+        }
         res.status(500).json({ error: err.message });
     }
 });
@@ -222,11 +173,11 @@ app.get('/api/hotels/:id/reviews', async (req, res) => {
     try {
         const result = await pool.query(
             `SELECT r.*,
-                CASE
-                    WHEN (u.first_name IS NOT NULL AND u.first_name != '') OR (u.last_name IS NOT NULL AND u.last_name != '')
-                        THEN TRIM(CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')))
-                    ELSE CASE WHEN u.name LIKE '%@%' THEN SPLIT_PART(u.name,'@',1) ELSE u.name END
-                END as author
+                    CASE
+                        WHEN (u.first_name IS NOT NULL AND u.first_name != '') OR (u.last_name IS NOT NULL AND u.last_name != '')
+                            THEN TRIM(CONCAT(COALESCE(u.first_name,''), ' ', COALESCE(u.last_name,'')))
+                        ELSE CASE WHEN u.name LIKE '%@%' THEN SPLIT_PART(u.name,'@',1) ELSE u.name END
+                        END as author
              FROM reviews r JOIN users u ON r."userId" = u.id WHERE r."hotelId" = $1 ORDER BY r.date DESC`,
             [req.params.id]
         );
@@ -313,11 +264,11 @@ app.get('/api/bookings/user/:userId', async (req, res) => {
 });
 
 async function startServer() {
-    await loadSearchTemplate();
     await initDB();
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`✅ Сервер запущен на порту ${PORT}`);
+        console.log(`   Скрапер ожидается на: ${process.env.SCRAPER_URL || 'http://localhost:3001'}`);
     });
 }
 

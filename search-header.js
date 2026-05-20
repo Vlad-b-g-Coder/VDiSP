@@ -349,6 +349,8 @@ function buildGuestsPanel() {
     document.getElementById("guestsConfirm").addEventListener("click", () => {
         searchState.adults = parseInt(document.getElementById("guestsCount").textContent);
         updateUI(); saveSearchState(); closeGuestsPanel();
+        // ДОБАВЬ ЭТУ СТРОКУ:
+        if (typeof updateAllPrices === "function") updateAllPrices();
     });
 }
 

@@ -300,6 +300,8 @@ function confirmDates() {
     searchState.checkout = calSelectState.checkout;
     updateUI(); saveSearchState(); closeCalPanel();
     if (typeof updatePriceBlockStyle === "function") updatePriceBlockStyle();
+    // ДОБАВЬ ЭТУ СТРОКУ:
+    if (typeof updateAllPrices === "function") updateAllPrices();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -349,6 +351,8 @@ function buildGuestsPanel() {
     document.getElementById("guestsConfirm").addEventListener("click", () => {
         searchState.adults = parseInt(document.getElementById("guestsCount").textContent);
         updateUI(); saveSearchState(); closeGuestsPanel();
+        // ДОБАВЬ ЭТУ СТРОКУ:
+        if (typeof updateAllPrices === "function") updateAllPrices();
     });
 }
 
