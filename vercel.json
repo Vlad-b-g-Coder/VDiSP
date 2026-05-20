@@ -4,6 +4,25 @@
     {
       "src": "server/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "**/*.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "**/*.js",
+      "use": "@vercel/static",
+      "config": {
+        "exclude": ["server/**"]
+      }
+    },
+    {
+      "src": "**/*.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "onehotel/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -16,16 +35,16 @@
       "dest": "/styleAll.css"
     },
     {
+      "src": "/details.css",
+      "dest": "/details.css"
+    },
+    {
       "src": "/script.js",
       "dest": "/script.js"
     },
     {
       "src": "/search-header.js",
       "dest": "/search-header.js"
-    },
-    {
-      "src": "/details.css",
-      "dest": "/details.css"
     },
     {
       "src": "/onehotel/(.*)",
