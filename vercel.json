@@ -8,6 +8,30 @@
   ],
   "routes": [
     {
+      "src": "/styles.css",
+      "dest": "/styles.css"
+    },
+    {
+      "src": "/styleAll.css",
+      "dest": "/styleAll.css"
+    },
+    {
+      "src": "/script.js",
+      "dest": "/script.js"
+    },
+    {
+      "src": "/search-header.js",
+      "dest": "/search-header.js"
+    },
+    {
+      "src": "/details.css",
+      "dest": "/details.css"
+    },
+    {
+      "src": "/onehotel/(.*)",
+      "dest": "/onehotel/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "server/server.js"
     }
