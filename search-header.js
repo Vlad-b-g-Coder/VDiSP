@@ -52,7 +52,7 @@ function updateUI() {
     const guestsSpan = document.querySelector(".guests-value");
     if (citySpan)   citySpan.textContent   = searchState.location;
     if (datesSpan)  datesSpan.textContent  = `${formatDateRU(searchState.checkin)} — ${formatDateRU(searchState.checkout)}`;
-    if (guestsSpan) guestsSpan.textContent = `Гостей: ${searchState.adults}`;
+    if (guestsSpan) guestsSpan.textContent = t("guestsCount", searchState.adults);
 }
 updateUI();
 
@@ -873,6 +873,441 @@ function renderProfileBookings(bookings, container) {
 }
 
 // ═══════════════════════════════════════════════════════
+//  i18n — ПЕРЕКЛЮЧЕНИЕ ЯЗЫКА (RU / EN)
+// ═══════════════════════════════════════════════════════
+const I18N = {
+    RU: {
+        loginBtn:        "Войти",
+        home:            "Home",
+        whereGo:         "Куда едем?",
+        dates:           "Даты",
+        guests:          "Гости",
+        guestsCount:     (n) => `Гостей: ${n}`,
+        cityPanelTitle:  "Куда едем?",
+        calTitle:        "Выберите даты",
+        calCheckin:      "Дата заезда",
+        calCheckout:     "Дата выезда",
+        calSelectCheckin:"Выберите заезд",
+        calSelectCheckout:"Выберите выезд",
+        calCheckInLabel: (d) => "Заезд: " + d,
+        calCheckOutLabel:(d) => "Выезд: " + d,
+        calConfirm:      "Выбрать",
+        guestsTitle:     "Гости",
+        guestsAdults:    "Взрослые",
+        guestsConfirm:   "Готово",
+        authTitle:       "Вход",
+        authRegTitle:    "Регистрация",
+        authLoginPlaceholder: "Логин",
+        authPassPlaceholder:  "Пароль",
+        authNamePlaceholder:  "Никнейм (опционально)",
+        authFirstPlaceholder: "Имя",
+        authLastPlaceholder:  "Фамилия",
+        authGoogleBtn:   "Войти через Google",
+        authSubmitLogin: "Войти",
+        authSubmitReg:   "Зарегистрироваться",
+        authToggleReg:   "Нет аккаунта? Зарегистрироваться",
+        authToggleLogin: "Уже есть аккаунт? Войти",
+        profileBookings: "Мои бронирования",
+        profileLogout:   "Выйти из аккаунта",
+        profileSave:     "Сохранить",
+        noHotels:        (city) => `Отели не найдены для города «${city}»`,
+        loadingHotels:   "Загружаем отели...",
+        allLoaded:       "Все отели загружены",
+        loading:         "Загрузка...",
+        noPrice:         "Цена не указана",
+    },
+    EN: {
+        loginBtn:        "Login",
+        home:            "Home",
+        whereGo:         "Where to?",
+        dates:           "Dates",
+        guests:          "Guests",
+        guestsCount:     (n) => `Guests: ${n}`,
+        cityPanelTitle:  "Where to?",
+        calTitle:        "Select dates",
+        calCheckin:      "Check-in date",
+        calCheckout:     "Check-out date",
+        calSelectCheckin: "Select check-in",
+        calSelectCheckout:"Select check-out",
+        calCheckInLabel: (d) => "Check-in: " + d,
+        calCheckOutLabel:(d) => "Check-out: " + d,
+        calConfirm:      "Select",
+        guestsTitle:     "Guests",
+        guestsAdults:    "Adults",
+        guestsConfirm:   "Done",
+        authTitle:       "Login",
+        authRegTitle:    "Register",
+        authLoginPlaceholder: "Login",
+        authPassPlaceholder:  "Password",
+        authNamePlaceholder:  "Nickname (optional)",
+        authFirstPlaceholder: "First name",
+        authLastPlaceholder:  "Last name",
+        authGoogleBtn:   "Sign in with Google",
+        authSubmitLogin: "Login",
+        authSubmitReg:   "Register",
+        authToggleReg:   "No account? Register",
+        authToggleLogin: "Already have an account? Login",
+        profileBookings: "My bookings",
+        profileLogout:   "Sign out",
+        profileSave:     "Save",
+        noHotels:        (city) => `No hotels found for "${city}"`,
+        loadingHotels:   "Loading hotels...",
+        allLoaded:       "All hotels loaded",
+        loading:         "Loading...",
+        noPrice:         "Price not available",
+    }
+};
+
+window.currentLang = localStorage.getItem("siteLang") || "RU";
+
+function t(key, ...args) {
+    const dict = I18N[window.currentLang] || I18N["RU"];
+    const val  = dict[key];
+    if (typeof val === "function") return val(...args);
+    return val || key;
+}
+window.t = t;
+
+function applyLang() {
+    const lang = window.currentLang;
+    // Кнопка Войти
+    const vhodSpan = document.querySelector(".vhod .v1_7");
+    if (vhodSpan && !window.currentUser) vhodSpan.textContent = t("loginBtn");
+    // Home
+    const homeSpan = document.querySelector(".v1_11");
+    if (homeSpan) homeSpan.textContent = t("home");
+    // Метка языка
+    const langSpan = document.querySelector(".v1_10");
+    if (langSpan) langSpan.textContent = lang;
+    // Поиск плейсхолдеры
+    const whereSpan = document.querySelector(".v4_9");
+    if (whereSpan) whereSpan.textContent = t("whereGo");
+    // Пересчитываем UI
+    updateUI();
+}
+
+function buildLangPanel() {
+    if (document.getElementById("langPanel")) return;
+
+    const overlay = createOverlay("langOverlay");
+    overlay.addEventListener("click", closeLangPanel);
+
+    const panel = document.createElement("div");
+    panel.id = "langPanel";
+    panel.style.cssText = `
+        display:none; position:fixed; top:50%; left:50%;
+        transform:translate(-50%,-50%) scale(0.95); opacity:0;
+        background:#fff; border-radius:10px;
+        padding:14px 16px; width:220px;
+        z-index:9000; box-shadow:0 12px 40px rgba(0,0,0,0.3);
+        font-family:'Inter',sans-serif;
+        transition:transform .2s ease, opacity .2s ease;
+    `;
+    panel.innerHTML = `
+        <h2 style="margin:0 0 10px;font-size:13px;font-weight:700;color:#111;">Язык / Language</h2>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+            ${["RU","EN"].map(l => `
+                <button data-lang="${l}" style="
+                    padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;
+                    border:2px solid ${l === window.currentLang ? '#2cff00' : '#e8e8e8'};
+                    background:${l === window.currentLang ? '#f0fff0' : '#fafafa'};
+                    cursor:pointer;font-family:'Inter',sans-serif;color:#222;
+                    display:flex;align-items:center;gap:8px;transition:.15s;
+                ">
+                    <span>${l === "RU" ? "🇷🇺" : "🇬🇧"}</span>
+                    <span>${l === "RU" ? "Русский" : "English"}</span>
+                </button>
+            `).join("")}
+        </div>
+    `;
+    document.body.appendChild(panel);
+
+    panel.querySelectorAll("button[data-lang]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            window.currentLang = btn.dataset.lang;
+            localStorage.setItem("siteLang", window.currentLang);
+            applyLang();
+            closeLangPanel();
+            // Обновляем панели если открыты
+            panel.querySelectorAll("button[data-lang]").forEach(b => {
+                b.style.borderColor = b.dataset.lang === window.currentLang ? "#2cff00" : "#e8e8e8";
+                b.style.background  = b.dataset.lang === window.currentLang ? "#f0fff0" : "#fafafa";
+            });
+        });
+    });
+}
+
+function openLangPanel() {
+    buildLangPanel();
+    // Обновляем подсветку
+    document.querySelectorAll("#langPanel button[data-lang]").forEach(b => {
+        b.style.borderColor = b.dataset.lang === window.currentLang ? "#2cff00" : "#e8e8e8";
+        b.style.background  = b.dataset.lang === window.currentLang ? "#f0fff0" : "#fafafa";
+    });
+    showOverlay("langOverlay");
+    const panel = document.getElementById("langPanel");
+    panel.style.display = "block";
+    requestAnimationFrame(() => {
+        panel.style.transform = "translate(-50%,-50%) scale(1)";
+        panel.style.opacity   = "1";
+    });
+}
+
+function closeLangPanel() {
+    hideOverlay("langOverlay");
+    const panel = document.getElementById("langPanel");
+    if (panel) {
+        panel.style.transform = "translate(-50%,-50%) scale(0.95)";
+        panel.style.opacity   = "0";
+        panel.style.display   = "none";
+    }
+}
+
+// ═══════════════════════════════════════════════════════
+//  СМЕНА ВАЛЮТЫ — на v1_5
+// ═══════════════════════════════════════════════════════
+const CURRENCIES = [
+    { code: "EUR", symbol: "€", label: "Евро"      },
+    { code: "USD", symbol: "$", label: "Доллар"    },
+    { code: "GBP", symbol: "£", label: "Фунт"      },
+    { code: "RUB", symbol: "₽", label: "Рубль"     },
+    { code: "CZK", symbol: "Kč",label: "Крона"     },
+    { code: "TRY", symbol: "₺", label: "Лира"      },
+    { code: "JPY", symbol: "¥", label: "Иена"      },
+    { code: "AED", symbol: "د.إ",label: "Дирхам"   },
+];
+
+const EXCHANGE_RATES = {
+    EUR: 1,
+    USD: 1.09,
+    GBP: 0.86,
+    RUB: 99.5,
+    CZK: 25.2,
+    TRY: 35.8,
+    JPY: 163.0,
+    AED: 4.0,
+};
+
+window.currentCurrency = localStorage.getItem("siteCurrency") || "EUR";
+
+function convertPrice(amountEUR) {
+    if (!amountEUR) return null;
+    const rate = EXCHANGE_RATES[window.currentCurrency] || 1;
+    return Math.round(amountEUR * rate);
+}
+window.convertPrice = convertPrice;
+
+function getCurrencySymbol() {
+    return CURRENCIES.find(c => c.code === window.currentCurrency)?.symbol || window.currentCurrency;
+}
+window.getCurrencySymbol = getCurrencySymbol;
+
+function buildCurrencyPanel() {
+    if (document.getElementById("currencyPanel")) return;
+
+    const overlay = createOverlay("currencyOverlay");
+    overlay.addEventListener("click", closeCurrencyPanel);
+
+    const panel = document.createElement("div");
+    panel.id = "currencyPanel";
+    panel.style.cssText = `
+        display:none; position:fixed; top:50%; left:50%;
+        transform:translate(-50%,-50%) scale(0.95); opacity:0;
+        background:#fff; border-radius:10px;
+        padding:14px 16px; width:260px;
+        z-index:9000; box-shadow:0 12px 40px rgba(0,0,0,0.3);
+        font-family:'Inter',sans-serif;
+        transition:transform .2s ease, opacity .2s ease;
+    `;
+
+    const rows = CURRENCIES.map(c => `
+        <button data-cur="${c.code}" style="
+            padding:8px 12px;border-radius:6px;font-size:13px;font-weight:600;
+            border:2px solid ${c.code === window.currentCurrency ? '#2cff00' : '#e8e8e8'};
+            background:${c.code === window.currentCurrency ? '#f0fff0' : '#fafafa'};
+            cursor:pointer;font-family:'Inter',sans-serif;color:#222;
+            display:flex;align-items:center;justify-content:space-between;transition:.15s;
+            width:100%;
+        ">
+            <span>${c.label}</span>
+            <span style="color:#555;">${c.symbol} ${c.code}</span>
+        </button>
+    `).join("");
+
+    panel.innerHTML = `
+        <h2 style="margin:0 0 10px;font-size:13px;font-weight:700;color:#111;">Валюта / Currency</h2>
+        <div style="display:flex;flex-direction:column;gap:6px;">${rows}</div>
+    `;
+    document.body.appendChild(panel);
+
+    panel.querySelectorAll("button[data-cur]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            window.currentCurrency = btn.dataset.cur;
+            localStorage.setItem("siteCurrency", window.currentCurrency);
+            updateCurrencyLabel();
+            closeCurrencyPanel();
+            // Пересчитать все цены на странице
+            if (typeof updateAllPrices === "function") updateAllPrices();
+            // Обновляем подсветку кнопок
+            panel.querySelectorAll("button[data-cur]").forEach(b => {
+                b.style.borderColor = b.dataset.cur === window.currentCurrency ? "#2cff00" : "#e8e8e8";
+                b.style.background  = b.dataset.cur === window.currentCurrency ? "#f0fff0" : "#fafafa";
+            });
+        });
+    });
+}
+
+function updateCurrencyLabel() {
+    const el = document.querySelector(".v1_5 .currency-label");
+    if (el) el.textContent = window.currentCurrency;
+}
+
+function openCurrencyPanel() {
+    buildCurrencyPanel();
+    document.querySelectorAll("#currencyPanel button[data-cur]").forEach(b => {
+        b.style.borderColor = b.dataset.cur === window.currentCurrency ? "#2cff00" : "#e8e8e8";
+        b.style.background  = b.dataset.cur === window.currentCurrency ? "#f0fff0" : "#fafafa";
+    });
+    showOverlay("currencyOverlay");
+    const panel = document.getElementById("currencyPanel");
+    panel.style.display = "block";
+    requestAnimationFrame(() => {
+        panel.style.transform = "translate(-50%,-50%) scale(1)";
+        panel.style.opacity   = "1";
+    });
+}
+
+function closeCurrencyPanel() {
+    hideOverlay("currencyOverlay");
+    const panel = document.getElementById("currencyPanel");
+    if (panel) {
+        panel.style.transform = "translate(-50%,-50%) scale(0.95)";
+        panel.style.opacity   = "0";
+        panel.style.display   = "none";
+    }
+}
+
+// ── Инициализация метки валюты на v1_5 ───────────────
+function initCurrencyLabel() {
+    const v1_5 = document.querySelector(".v1_5");
+    if (!v1_5 || v1_5.querySelector(".currency-label")) return;
+    const span = document.createElement("span");
+    span.className = "currency-label";
+    span.textContent = window.currentCurrency;
+    span.style.cssText = `
+        position:absolute;
+        top:50%; left:50%;
+        transform:translate(-50%,-50%);
+        color:#fff;
+        font-family:'Inter',sans-serif;
+        font-size:18px;
+        font-weight:700;
+        cursor:pointer;
+        letter-spacing:0.5px;
+        white-space:nowrap;
+        pointer-events:none;
+        text-shadow:0 1px 4px rgba(0,0,0,0.4);
+    `;
+    v1_5.style.position = "relative";
+    v1_5.style.cursor   = "pointer";
+    v1_5.appendChild(span);
+    v1_5.addEventListener("click", (e) => { e.stopPropagation(); openCurrencyPanel(); });
+}
+
+// ═══════════════════════════════════════════════════════
+//  КАРУСЕЛЬ ОБОЕВ — initHeroCarousel (перенесена из script.js)
+// ═══════════════════════════════════════════════════════
+let _carouselTimer = null;
+
+function initHeroCarousel() {
+    const el = document.querySelector('.v4_15');
+    if (!el) return;
+
+    // Пробуем взять allHotels из window (script.js экспортирует его через window)
+    const hotels = window.allHotels || [];
+    if (hotels.length === 0) return;
+
+    if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
+    el.innerHTML = '';
+
+    const pool = hotels
+        .map((h, i) => ({ hotel: h, index: i }))
+        .filter(({ hotel }) => {
+            const mp = hotel.basicPropertyData?.photos?.main;
+            return mp?.highResUrl?.relativeUrl || mp?.lowResJpegUrl?.relativeUrl;
+        })
+        .slice(0, 8);
+
+    if (pool.length === 0) return;
+
+    el.style.cssText = `position:absolute;overflow:hidden;cursor:pointer;border-radius:inherit;`;
+
+    const slides = pool.map(({ hotel }, i) => {
+        const mp  = hotel.basicPropertyData.photos.main;
+        const url = 'https://cf.bstatic.com' + (mp.highResUrl?.relativeUrl || mp.lowResJpegUrl?.relativeUrl);
+        const div = document.createElement('div');
+        div.style.cssText = `
+            position:absolute;inset:0;
+            background:url('${url}') center/cover no-repeat;
+            opacity:${i === 0 ? 1 : 0};
+            transition:opacity 0.8s ease;
+        `;
+        el.appendChild(div);
+        return div;
+    });
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.55) 100%);z-index:1;pointer-events:none;`;
+    el.appendChild(overlay);
+
+    const label = document.createElement('div');
+    label.style.cssText = `position:absolute;bottom:18px;left:18px;right:18px;color:#fff;font-family:'Inter',sans-serif;font-size:28px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,0.7);z-index:2;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`;
+    label.textContent = pool[0].hotel.displayName?.text || '';
+    el.appendChild(label);
+
+    const dots = document.createElement('div');
+    dots.style.cssText = `position:absolute;bottom:8px;right:14px;display:flex;gap:6px;z-index:2;pointer-events:none;`;
+    const dotEls = pool.map((_, i) => {
+        const d = document.createElement('div');
+        d.style.cssText = `width:${i === 0 ? 18 : 7}px;height:7px;border-radius:4px;background:${i === 0 ? '#2cff00' : 'rgba(255,255,255,0.5)'};transition:all 0.3s ease;`;
+        dots.appendChild(d);
+        return d;
+    });
+    el.appendChild(dots);
+
+    let current = 0;
+    function goTo(next) {
+        slides[current].style.opacity = '0';
+        dotEls[current].style.width = '7px';
+        dotEls[current].style.background = 'rgba(255,255,255,0.5)';
+        current = next;
+        slides[current].style.opacity = '1';
+        dotEls[current].style.width = '18px';
+        dotEls[current].style.background = '#2cff00';
+        label.textContent = pool[current].hotel.displayName?.text || '';
+    }
+
+    _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
+
+    el.addEventListener('click', () => {
+        clearInterval(_carouselTimer);
+        if (typeof handleHotelSelect === 'function') handleHotelSelect(pool[current].hotel, pool[current].index);
+    });
+
+    let touchStartX = 0;
+    el.addEventListener('pointerdown', e => { touchStartX = e.clientX; });
+    el.addEventListener('pointerup', e => {
+        const dx = e.clientX - touchStartX;
+        if (Math.abs(dx) > 30) {
+            clearInterval(_carouselTimer);
+            goTo(dx < 0 ? (current + 1) % pool.length : (current - 1 + pool.length) % pool.length);
+            _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
+        }
+    });
+}
+window.initHeroCarousel = initHeroCarousel;
+
+// ═══════════════════════════════════════════════════════
 //  ПРИВЯЗКА КНОПОК ШАПКИ
 // ═══════════════════════════════════════════════════════
 function bindHeaderButtons() {
@@ -924,10 +1359,20 @@ function bindHeaderButtons() {
             window.location.href = window.location.href.includes("onehotel") ? "../intent.html" : "intent.html";
         });
     }
+
+    // ── Язык: v1_8 (иконка) + v1_10 (текст "RU") ──
+    const langIcon = document.querySelector(".v1_8");
+    const langText = document.querySelector(".v1_10");
+    function openLangOnClick(e) { e.stopPropagation(); openLangPanel(); }
+    if (langIcon) { langIcon.style.cursor = "pointer"; langIcon.addEventListener("click", openLangOnClick); }
+    if (langText) { langText.style.cursor = "pointer"; langText.addEventListener("click", openLangOnClick); }
+
+    // ── Валюта: v1_5 ──
+    initCurrencyLabel();
 }
 
-document.addEventListener("DOMContentLoaded", () => { updateUI(); bindHeaderButtons(); });
-if (document.readyState !== "loading") { updateUI(); bindHeaderButtons(); }
+document.addEventListener("DOMContentLoaded", () => { updateUI(); applyLang(); bindHeaderButtons(); });
+if (document.readyState !== "loading") { updateUI(); applyLang(); bindHeaderButtons(); }
 
 window.openAuthPanel    = openAuthPanel;
 window.openProfilePanel = openProfilePanel;

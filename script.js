@@ -27,8 +27,11 @@ function calcPrice(hotel, nights, adults) {
 }
 
 function formatPrice(amount, currency) {
-    if (!amount) return 'Цена не указана';
-    return `${amount} ${currency || 'EUR'}`;
+    if (!amount) return window.t ? window.t("noPrice") : 'Цена не указана';
+    // Конвертируем из EUR в текущую валюту
+    const converted = window.convertPrice ? window.convertPrice(amount) : amount;
+    const symbol    = window.getCurrencySymbol ? window.getCurrencySymbol() : (currency || 'EUR');
+    return `${converted} ${symbol}`;
 }
 
 // ── Карточка отеля ────────────────────────────────────────────────────────────
@@ -279,6 +282,7 @@ async function loadHotelsBySearch() {
         );
 
         allHotels = key ? data[key] : [];
+        window.allHotels = allHotels; // экспорт для initHeroCarousel в search-header.js
         loader.style.display = 'none';
 
         if (allHotels.length === 0) {
@@ -306,128 +310,9 @@ async function loadHotelsBySearch() {
 
 window.loadHotelsBySearch = loadHotelsBySearch;
 
-// ── Карусель обоев на v4_15 ──────────────────────────────────────────────────
-let _carouselTimer = null;
-
-function initHeroCarousel() {
-    const el = document.querySelector('.v4_15');
-    if (!el || allHotels.length === 0) return;
-
-    // Останавливаем старый таймер и чистим содержимое
-    if (_carouselTimer) { clearInterval(_carouselTimer); _carouselTimer = null; }
-    el.innerHTML = '';
-
-    // Берём до 8 случайных отелей с фото
-    const pool = allHotels
-        .map((h, i) => ({ hotel: h, index: i }))
-        .filter(({ hotel }) => {
-            const mp = hotel.basicPropertyData?.photos?.main;
-            return mp?.highResUrl?.relativeUrl || mp?.lowResJpegUrl?.relativeUrl;
-        })
-        .slice(0, 8);
-
-    if (pool.length === 0) return;
-
-    // Стиль контейнера
-    el.style.cssText = `
-        position:absolute;
-        overflow:hidden;
-        cursor:pointer;
-        border-radius:inherit;
-    `;
-
-    // Создаём слои фото
-    const slides = pool.map(({ hotel }, i) => {
-        const mp = hotel.basicPropertyData.photos.main;
-        const url = 'https://cf.bstatic.com' + (mp.highResUrl?.relativeUrl || mp.lowResJpegUrl?.relativeUrl);
-        const div = document.createElement('div');
-        div.style.cssText = `
-            position:absolute;inset:0;
-            background:url('${url}') center/cover no-repeat;
-            opacity:${i === 0 ? 1 : 0};
-            transition:opacity 0.8s ease;
-        `;
-        el.appendChild(div);
-        return div;
-    });
-
-    // Затемнение поверх
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position:absolute;inset:0;
-        background:linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%);
-        z-index:1;pointer-events:none;
-    `;
-    el.appendChild(overlay);
-
-    // Название отеля поверх
-    const label = document.createElement('div');
-    label.style.cssText = `
-        position:absolute;bottom:18px;left:18px;right:18px;
-        color:#fff;font-family:'Inter',sans-serif;
-        font-size:28px;font-weight:700;
-        text-shadow:0 2px 8px rgba(0,0,0,0.7);
-        z-index:2;pointer-events:none;
-        white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    `;
-    label.textContent = pool[0].hotel.displayName?.text || '';
-    el.appendChild(label);
-
-    // Точки-индикаторы
-    const dots = document.createElement('div');
-    dots.style.cssText = `
-        position:absolute;bottom:8px;right:14px;
-        display:flex;gap:6px;z-index:2;pointer-events:none;
-    `;
-    const dotEls = pool.map((_, i) => {
-        const d = document.createElement('div');
-        d.style.cssText = `
-            width:${i === 0 ? 18 : 7}px;height:7px;border-radius:4px;
-            background:${i === 0 ? '#2cff00' : 'rgba(255,255,255,0.5)'};
-            transition:all 0.3s ease;
-        `;
-        dots.appendChild(d);
-        return d;
-    });
-    el.appendChild(dots);
-
-    let current = 0;
-
-    function goTo(next) {
-        slides[current].style.opacity = '0';
-        dotEls[current].style.width = '7px';
-        dotEls[current].style.background = 'rgba(255,255,255,0.5)';
-        current = next;
-        slides[current].style.opacity = '1';
-        dotEls[current].style.width = '18px';
-        dotEls[current].style.background = '#2cff00';
-        label.textContent = pool[current].hotel.displayName?.text || '';
-    }
-
-    // Автопрокрутка каждые 3 сек
-    _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
-
-    // Клик — переход на отель
-    el.addEventListener('click', () => {
-        clearInterval(_carouselTimer);
-        handleHotelSelect(pool[current].hotel, pool[current].index);
-    });
-
-    // Свайп/перетаскивание
-    let touchStartX = 0;
-    el.addEventListener('pointerdown', e => { touchStartX = e.clientX; });
-    el.addEventListener('pointerup', e => {
-        const dx = e.clientX - touchStartX;
-        if (Math.abs(dx) > 30) {
-            clearInterval(_carouselTimer);
-            goTo(dx < 0
-                ? (current + 1) % pool.length
-                : (current - 1 + pool.length) % pool.length
-            );
-            _carouselTimer = setInterval(() => goTo((current + 1) % pool.length), 3000);
-        }
-    });
-}
+// ── Карусель обоев — функция перенесена в search-header.js ───────────────────
+// initHeroCarousel() вызывается после загрузки отелей (см. loadHotelsBySearch)
+// и доступна через window.initHeroCarousel
 
 // ── Масштабирование обёртки ───────────────────────────────────────────────────
 function scaleSiteWrapper() {
