@@ -9,7 +9,7 @@
       }
     },
     {
-      "src": "**/*.{css,html}",
+      "src": "**/*.{css,html,json}",
       "use": "@vercel/static"
     },
     {
