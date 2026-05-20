@@ -312,59 +312,27 @@ async function loadHotelsBySearch() {
     loader.innerText = "Ищем отели...";
 
     try {
-        const cityToDestId = {
-            'рим': -126693, 'rome': -126693,
-            'афины': -814876, 'athens': -814876,
-            'афина': -814876, 'athen': -814876
-        };
-
-        const destId = cityToDestId[location.toLowerCase().trim()];
-        if (!destId) throw new Error(`Город "${location}" не поддерживается`);
-
-        // Шаблон запроса — берём прямо из forapi.json (грузим один раз)
-        if (!window._searchTemplate) {
-            const tplRes = await fetch('/server/forapi.json');
-            window._searchTemplate = await tplRes.json();
-        }
-
-        const requestBody = JSON.parse(JSON.stringify(window._searchTemplate));
-        requestBody.variables.input.location.searchString = location;
-        requestBody.variables.input.location.destId = destId;
-        requestBody.variables.input.dates.checkin = checkin;
-        requestBody.variables.input.dates.checkout = checkout;
-        requestBody.variables.input.flexibleDatesConfig.dateRangeCalendar.checkin = [checkin];
-        requestBody.variables.input.flexibleDatesConfig.dateRangeCalendar.checkout = [checkout];
-        requestBody.variables.input.nbAdults = parseInt(adults);
-
-        // Запрос идёт с браузера пользователя — не с сервера!
-        const res = await fetch('https://www.booking.com/dml/graphql', {
+        // ИСПРАВЛЕНО: запрос к своему серверу, а не напрямую к Booking.com
+        const response = await fetch('/api/search', {
             method: 'POST',
             headers: {
-                'content-type': 'application/json',
-                'accept': 'application/json',
-                'accept-language': 'ru-RU,ru;q=0.9',
-                'apollographql-client-name': 'b-search-web-searchresults',
-                'origin': 'https://www.booking.com',
-                'referer': 'https://www.booking.com/searchresults.ru.html'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify(requestBody)
+            body: JSON.stringify({
+                location: location,
+                checkin: checkin,
+                checkout: checkout,
+                adults: adults
+            })
         });
 
-        if (!res.ok) throw new Error(`Booking.com: HTTP ${res.status}`);
-        const data = await res.json();
-
-        allHotels = data?.data?.searchQueries?.search?.results
-            || data?.data?.search?.results
-            || [];
-
-        // Сохраняем на сервер чтобы /api/hotels/:id работал
-        if (allHotels.length > 0) {
-            fetch('/api/search/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(allHotels)
-            }).catch(() => {});
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP ${response.status}`);
         }
+
+        const data = await response.json();
+        allHotels = data.hotels || [];
 
         loader.style.display = "none";
 
@@ -377,8 +345,14 @@ async function loadHotelsBySearch() {
 
     } catch (e) {
         console.error("loadHotelsBySearch error:", e);
-        loader.innerText = "Ошибка загрузки";
+        loader.innerText = "Ошибка загрузки: " + e.message;
         setTimeout(() => { loader.style.display = "none"; }, 3000);
+
+        // Показываем понятную ошибку пользователю
+        if (container) container.innerHTML = `<div style="position:absolute;top:100px;left:50%;transform:translateX(-50%);font-size:28px;color:#888;font-family:'Inter',sans-serif;text-align:center;">
+            Ошибка загрузки отелей<br>
+            <small style="font-size:16px;">${e.message}</small>
+        </div>`;
     }
 }
 

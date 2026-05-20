@@ -57,17 +57,78 @@ const cityToDestId = {
 };
 
 // server.js - /api/search теперь просто принимает результаты от клиента
-app.post('/api/search/save', async (req, res) => {
+// server.js - добавляем старый /api/search с диагностикой
+
+// Добавьте это в server.js перед остальными маршрутами
+app.post('/api/search', async (req, res) => {
     try {
-        const hotels = req.body;
-        if (!Array.isArray(hotels)) return res.status(400).json({ error: 'Ожидается массив' });
-        lastSearchResults = hotels.map((hotel, idx) => ({ ...hotel, searchIndex: idx }));
-        res.json({ ok: true, count: hotels.length });
+        const { location, checkin, checkout, adults } = req.body;
+
+        console.log('🔍 /api/search called:', { location, checkin, checkout, adults });
+
+        const cityToDestId = {
+            'рим': -126693, 'rome': -126693,
+            'афины': -814876, 'athens': -814876,
+            'афина': -814876, 'athen': -814876
+        };
+
+        const destId = cityToDestId[location?.toLowerCase().trim()];
+        if (!destId) {
+            return res.status(400).json({ error: `Город "${location}" не поддерживается` });
+        }
+
+        // Загружаем шаблон если ещё не загружен
+        if (!searchTemplate) {
+            await loadSearchTemplate();
+        }
+
+        const requestBody = JSON.parse(JSON.stringify(searchTemplate));
+        requestBody.variables.input.location.searchString = location;
+        requestBody.variables.input.location.destId = destId;
+        requestBody.variables.input.dates.checkin = checkin;
+        requestBody.variables.input.dates.checkout = checkout;
+        requestBody.variables.input.nbAdults = parseInt(adults) || 2;
+
+        const response = await fetch('https://www.booking.com/dml/graphql', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'Accept-Language': 'ru-RU,ru;q=0.9',
+                'apollographql-client-name': 'b-search-web-searchresults',
+                'Origin': 'https://www.booking.com',
+                'Referer': 'https://www.booking.com/searchresults.ru.html',
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        const rawText = await response.text();
+        console.log('📡 Booking.com status:', response.status);
+        console.log('📄 Body preview:', rawText.slice(0, 500));
+
+        if (!response.ok) {
+            return res.status(response.status).json({
+                error: `Booking.com error ${response.status}`,
+                bodyPreview: rawText.slice(0, 200)
+            });
+        }
+
+        const data = JSON.parse(rawText);
+        const hotels = data?.data?.searchQueries?.search?.results || data?.data?.search?.results || [];
+
+        // Сохраняем для /api/hotels/:id
+        if (hotels.length > 0) {
+            lastSearchResults = hotels.map((hotel, idx) => ({ ...hotel, searchIndex: idx }));
+        }
+
+        res.json({ success: true, count: hotels.length, hotels: hotels });
+
     } catch (err) {
+        console.error('❌ /api/search error:', err);
         res.status(500).json({ error: err.message });
     }
 });
-
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { login, password, name, first_name, last_name } = req.body;
