@@ -35,18 +35,22 @@ function initAuthButton() {
             window.currentUser = currentUser;
         }
     }
-    // Показываем ФИ, никогда не показываем полный email
+    // Показываем инициалы, никогда не показываем полный email
     const span = document.querySelector('.vhod .v1_7');
     if (span) {
         if (currentUser) {
             const fn = (currentUser.first_name || '').trim();
             const ln = (currentUser.last_name  || '').trim();
-            let display = [fn, ln].filter(Boolean).join(' ');
-            if (!display) {
+            let display = '';
+            if (fn || ln) {
+                display = [fn[0], ln[0]].filter(Boolean).join('').toUpperCase();
+            } else {
                 const n = currentUser.name || '';
-                display = n.includes('@') ? n.split('@')[0] : n.slice(0, 12);
+                const clean = n.includes('@') ? n.split('@')[0] : n;
+                // Берём первые буквы слов
+                display = clean.split(/\s+/).map(w => w[0]).filter(Boolean).join('').toUpperCase().slice(0, 2);
             }
-            span.textContent = display;
+            span.textContent = display || 'Я';
         } else {
             span.textContent = 'Войти';
         }
@@ -287,18 +291,22 @@ function displayReviews(reviews) {
         container.innerHTML = '<div class="no-reviews">Пока нет отзывов</div>';
         return;
     }
-    container.innerHTML = reviews.map(r => `
+    container.innerHTML = reviews.map(r => {
+        // Никогда не показываем email — берём часть до @
+        const raw = r.author || 'Аноним';
+        const author = raw.includes('@') ? raw.split('@')[0] : raw;
+        return `
         <div class="review-card">
             <div class="review-header">
                 <div class="reviewer-info">
-                    <div class="review-author">${escapeHtml(r.author)}</div>
+                    <div class="review-author">${escapeHtml(author)}</div>
                     <div class="review-date">${new Date(r.date).toLocaleDateString('ru-RU')}</div>
                 </div>
                 <div class="review-stars">${getStarsHtml(r.rating)}</div>
             </div>
             <div class="review-text">${escapeHtml(r.text)}</div>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 function getStarsHtml(rating) {
@@ -309,16 +317,31 @@ function getStarsHtml(rating) {
     return stars;
 }
 
-async function submitReview(hotelId, userId, rating, text) {
+async function submitReview(hotelId, userId, rating, text, user) {
     if (!userId) {
         alert('Пожалуйста, войдите (нажмите на зелёную полосу и введите имя)');
         return false;
     }
+
+    // Собираем имя: first_name + last_name, или name, но никогда не email
+    let authorName = '';
+    if (user) {
+        const fn = (user.first_name || '').trim();
+        const ln = (user.last_name  || '').trim();
+        if (fn || ln) {
+            authorName = [fn, ln].filter(Boolean).join(' ');
+        } else {
+            const n = (user.name || '').trim();
+            // Если name выглядит как email — берём часть до @
+            authorName = n.includes('@') ? n.split('@')[0] : n;
+        }
+    }
+
     try {
         const response = await fetch(`/api/hotels/${hotelId}/reviews`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId, rating, text })
+            body: JSON.stringify({ userId, rating, text, author: authorName })
         });
         if (response.ok) {
             loadReviews();
@@ -366,7 +389,7 @@ function initReviewForm() {
             alert('Отель не найден');
             return;
         }
-        const success = await submitReview(hotelId, currentUser?.id, currentRating, text);
+        const success = await submitReview(hotelId, currentUser?.id, currentRating, text, currentUser);
         if (success) {
             reviewText.value = '';
             updateStarsUI(5);

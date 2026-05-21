@@ -1342,10 +1342,12 @@ function bindHeaderButtons() {
     if (vhodDiv) {
         vhodDiv.id = "vhodBtn";
         vhodDiv.style.cursor = "pointer";
-        // Устанавливаем начальный текст с учётом ФИ
+        // Устанавливаем начальный текст с инициалами
         if (window.currentUser) {
             const { first_name, last_name, name } = window.currentUser;
-            const display = [first_name, last_name].filter(Boolean).join(" ") || name;
+            const a = (first_name || name || '').charAt(0).toUpperCase();
+            const b = (last_name || '').charAt(0).toUpperCase();
+            const display = b ? a + b : a;
             const span = vhodDiv.querySelector(".v1_7");
             if (span) span.textContent = display;
         }
