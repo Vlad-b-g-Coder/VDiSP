@@ -50,6 +50,10 @@ body {
     z-index: 100 !important;
 }
 
+.v4_12 {
+    pointer-events: none;
+}
+
 .v1_5, .v4_2, .v4_3, .v4_4 {
     overflow: hidden !important;
     z-index: 101 !important;
