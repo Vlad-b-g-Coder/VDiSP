@@ -12,8 +12,6 @@ const HOTELS_PER_BATCH = 12;
 let selectedHotel = null;
 
 // ── Коэффициент цены в зависимости от количества гостей ──────────────────────
-// 1 гость = базовая цена (×1.0)
-// Каждый доп. гость добавляет ~60% от базы (можно подкрутить)
 function guestMultiplier(adults) {
     const multipliers = { 1: 1.0, 2: 1.6, 3: 2.1, 4: 2.5 };
     return multipliers[adults] || 1.0 + (adults - 1) * 0.55;
@@ -28,7 +26,6 @@ function calcPrice(hotel, nights, adults) {
 
 function formatPrice(amount, currency) {
     if (!amount) return window.t ? window.t("noPrice") : 'Цена не указана';
-    // Конвертируем из EUR в текущую валюту
     const converted = window.convertPrice ? window.convertPrice(amount) : amount;
     const symbol    = window.getCurrencySymbol ? window.getCurrencySymbol() : (currency || 'EUR');
     return `${converted} ${symbol}`;
@@ -37,7 +34,7 @@ function formatPrice(amount, currency) {
 // ── Карточка отеля ────────────────────────────────────────────────────────────
 function createHotelCard(hotel, globalIndex) {
     const container = document.getElementById('dynamic-content');
-    const startY = 313;
+    const startY = 13;
     const rowStep = 355;
     const leftX  = 98;
     const rightX = 544;
@@ -78,9 +75,8 @@ function createHotelCard(hotel, globalIndex) {
     }
     hotelCard.appendChild(imgWrapper);
 
-    // Название — фон-прямоугольник (соприкасается с низом фото, закруглён со всех сторон)
+    // Название — фон-прямоугольник
     const nameBg = document.createElement('div');
-    // Фото: top:42, height:200 → низ фото = 242px; карточка height:350 → прямоугольник до низа = 108px
     nameBg.style.cssText = `
         position:absolute;left:0;top:242px;
         width:430px;height:108px;
@@ -90,7 +86,7 @@ function createHotelCard(hotel, globalIndex) {
     `;
     hotelCard.appendChild(nameBg);
 
-    // Название — перенос строк, не вылезать за прямоугольник и не залезать под кнопку цены
+    // Название
     const nameSpan = document.createElement('span');
     nameSpan.style.cssText = `
         position:absolute;left:12px;top:250px;
@@ -104,7 +100,7 @@ function createHotelCard(hotel, globalIndex) {
     nameSpan.innerText = hotel.displayName?.text || 'Без названия';
     hotelCard.appendChild(nameSpan);
 
-    // Кнопка с ценой (пересчитывается динамически)
+    // Кнопка с ценой
     const priceBtn = document.createElement('div');
     priceBtn.className = 'hotel-price-btn';
     priceBtn.style.cssText = 'position:absolute;left:270px;top:265px;width:129px;height:82px;background:linear-gradient(90deg,rgba(109,255,42,1),rgba(0,134,35,1));border-radius:16px;border:1px solid black;display:flex;align-items:center;justify-content:center;';
@@ -112,14 +108,12 @@ function createHotelCard(hotel, globalIndex) {
     const priceSpan = document.createElement('span');
     priceSpan.style.cssText = 'font-weight:bold;color:#072307;font-size:20px;text-align:center;white-space:nowrap;';
 
-    // Первоначальный расчёт из текущего searchState
     const state   = window.searchState || {};
     const nights  = calcNights(state.checkin, state.checkout) || 1;
     const adults  = state.adults || 1;
     const amount  = calcPrice(hotel, nights, adults);
     priceSpan.innerText = formatPrice(amount, hotel.currency);
 
-    // Сохраняем ссылку для обновления при смене дат/гостей
     hotelCard.dataset.hotelIndex = globalIndex;
     priceSpan.dataset.priceTarget = 'true';
 
@@ -133,14 +127,13 @@ function createHotelCard(hotel, globalIndex) {
 
     container.appendChild(hotelCard);
 
-    // Карточки absolute — контейнер сам не растягивается.
-    // Считаем нужную высоту и ставим явно.
-    const neededH = topY + 350 + 50; // низ карточки + запас
+    // Обновляем высоту контейнера
+    const neededH = topY + 350 + 50;
     const curH = parseInt(container.style.height) || 0;
     if (neededH > curH) container.style.height = neededH + 'px';
 }
 
-// ── Пересчёт всех цен на странице (вызывается при смене дат/гостей) ──────────
+// ── Пересчёт всех цен ─────────────────────────────────────────────────────────
 function updateAllPrices() {
     const state  = window.searchState || {};
     const nights = calcNights(state.checkin, state.checkout) || 1;
@@ -157,10 +150,9 @@ function updateAllPrices() {
     });
 }
 
-// Экспортируем для вызова из search-header.js после смены дат/гостей
 window.updateAllPrices = updateAllPrices;
 
-// ── Считаем количество ночей из двух дат ─────────────────────────────────────
+// ── Считаем количество ночей ──────────────────────────────────────────────────
 function calcNights(checkin, checkout) {
     if (!checkin || !checkout) return 1;
     const a = new Date(checkin);
@@ -208,7 +200,16 @@ function clearSelectedHotel() {
     localStorage.removeItem('selectedHotel');
 }
 
-// ── Пагинация (подгрузка порциями) ───────────────────────────────────────────
+// ── Проверка — нужно ли подгрузить ещё ───────────────────────────────────────
+function checkScrollAndLoad() {
+    const el = document.getElementById('dynamic-content');
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400 && !isLoading && hasMore) {
+        loadMoreHotels();
+    }
+}
+
+// ── Пагинация ─────────────────────────────────────────────────────────────────
 async function loadMoreHotels() {
     if (isLoading || !hasMore) return;
     isLoading = true;
@@ -245,14 +246,6 @@ async function loadMoreHotels() {
     setTimeout(checkScrollAndLoad, 100);
 }
 
-function checkScrollAndLoad() {
-    const el = document.getElementById('dynamic-content');
-    if (!el) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400 && !isLoading && hasMore) {
-        loadMoreHotels();
-    }
-}
-
 // ── Главная функция — загрузка из статики ─────────────────────────────────────
 async function loadHotelsBySearch() {
     const state    = window.searchState || {};
@@ -277,19 +270,17 @@ async function loadHotelsBySearch() {
     loader.innerText = 'Загружаем отели...';
 
     try {
-        // Грузим статичный JSON — никаких запросов к booking.com!
         const response = await fetch('/hotels_data.json');
         if (!response.ok) throw new Error('hotels_data.json не найден');
 
         const data = await response.json();
 
-        // Ищем по городу (регистронезависимо)
         const key = Object.keys(data).find(
             k => k.toLowerCase() === location.toLowerCase()
         );
 
         allHotels = key ? data[key] : [];
-        window.allHotels = allHotels; // экспорт для initHeroCarousel в search-header.js
+        window.allHotels = allHotels;
         loader.style.display = 'none';
 
         if (allHotels.length === 0) {
@@ -317,12 +308,6 @@ async function loadHotelsBySearch() {
 
 window.loadHotelsBySearch = loadHotelsBySearch;
 
-// ── Карусель обоев — функция перенесена в search-header.js ───────────────────
-// initHeroCarousel() вызывается после загрузки отелей (см. loadHotelsBySearch)
-// и доступна через window.initHeroCarousel
-
-
-
 // ── Инициализация ─────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
     const saved = localStorage.getItem('hotelSearchState');
@@ -340,10 +325,8 @@ window.addEventListener('load', () => {
     }
 
     loadHotelsBySearch();
-});
 
-
-document.addEventListener('DOMContentLoaded', () => {
+    // Скролл внутри #dynamic-content
     const dc = document.getElementById('dynamic-content');
     if (dc) dc.addEventListener('scroll', checkScrollAndLoad);
 });

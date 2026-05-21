@@ -23,7 +23,7 @@ body {
     width: 1080px;
     /* height задаётся скриптом: innerHeight / scale */
     background: white;
-    overflow: hidden;          /* сам не скролится */
+    overflow: visible;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     position: relative;
     flex-shrink: 0;
@@ -32,9 +32,20 @@ body {
 
 /* Скролл только внутри #dynamic-content */
 #dynamic-content {
+    position: absolute;
+    top: 200px;
+    left: 0;
+    right: 0;
+    bottom: -60px;
     background: transparent;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
+    z-index: 50;
+}
+
+.v1_2 {
+    position: relative;
+    overflow: visible !important;
 }
 
 .v4_2, .v4_3, .v4_4 {
