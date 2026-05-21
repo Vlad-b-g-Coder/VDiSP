@@ -19,16 +19,17 @@
             background: #000;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .site-wrapper {
             width: 1080px;
-            height: 1920px;
             position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
+            transform-origin: top center;
         }
 
         #dynamic-content {
@@ -117,5 +118,23 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="search-header.js"></script>
 <script src="script.js"></script>
+<script>
+    (function() {
+        function scaleSiteWrapper() {
+            const wrapper = document.querySelector('.site-wrapper');
+            if (!wrapper) return;
+            const scale = window.innerWidth / 1080;
+            wrapper.style.transform = `scale(${scale})`;
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.marginBottom = `${(wrapper.offsetHeight * scale) - wrapper.offsetHeight}px`;
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', scaleSiteWrapper);
+        } else {
+            scaleSiteWrapper();
+        }
+        window.addEventListener('resize', scaleSiteWrapper);
+    })();
+</script>
 </body>
 </html>

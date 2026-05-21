@@ -24,12 +24,13 @@
             function scaleSiteWrapper() {
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
-                const windowWidth = window.innerWidth;
-                const windowHeight = window.innerHeight;
                 const blockWidth = 1080;
-                const blockHeight = 1920;
-                const scale = Math.min(windowWidth / blockWidth, windowHeight / blockHeight);
+                // Масштаб ТОЛЬКО по ширине — высота свободно растёт вниз
+                const scale = window.innerWidth / blockWidth;
                 wrapper.style.transform = `scale(${scale})`;
+                wrapper.style.transformOrigin = 'top center';
+                // Компенсируем схлопывание высоты после scale
+                wrapper.style.marginBottom = `${(wrapper.offsetHeight * scale) - wrapper.offsetHeight}px`;
                 wrapper.classList.add('scaled');
             }
             if (document.readyState === 'loading') {
