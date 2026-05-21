@@ -1,4 +1,4 @@
-/* styleAll.css — масштабирование по ширине, скролл вертикально */
+/* styleAll.css */
 * {
     margin: 0;
     padding: 0;
@@ -12,7 +12,7 @@ body {
     align-items: flex-start;
     width: 100vw;
     height: 100vh;
-    overflow: hidden;           /* страница НЕ скроллится */
+    overflow: hidden;
     font-family: 'Inter', sans-serif;
 }
 
@@ -20,11 +20,10 @@ body {
     width: 1080px;
     height: 1920px;
     background: transparent;
-    overflow: visible;
-    box-shadow: none;
     position: relative;
-    transform-origin: top left;
+    transform-origin: top center;
     flex-shrink: 0;
+    /* overflow: hidden задаётся скриптом после масштабирования */
 }
 
 #dynamic-content {

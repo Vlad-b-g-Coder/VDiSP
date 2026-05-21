@@ -9,26 +9,15 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styleAll.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-
-        .site-wrapper {
-            width: 1080px;
-            height: 1920px;
+        /* v1_2 не обрезает дочерние — фон (v1_3, v1_13) растянется скриптом */
+        .v1_2 {
             position: relative;
+            z-index: 10;
+            overflow: visible;
+        }
+
+        /* Обёртка видимой области — обрезает по высоте экрана */
+        .site-wrapper {
             overflow: hidden;
         }
 
@@ -37,44 +26,28 @@
             top: 200px;
             left: 0;
             right: 0;
-
-            height: 1920px;
+            /* height задаётся скриптом: до низа видимой области */
             overflow-y: auto;
+            overflow-x: hidden;
+            background: transparent;
         }
         #dynamic-content > * {
             transform: translateY(-300px);
         }
-        #dynamic-content::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #dynamic-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        #dynamic-content::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-
-        .v1_2 {
-            position: relative;
-            z-index: 10;
-        }
-
+        #dynamic-content::-webkit-scrollbar { width: 4px; }
+        #dynamic-content::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+        #dynamic-content::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
     </style>
 </head>
 <body>
 <div class="site-wrapper">
-
     <div class="v1_2">
 
-        <div class="v1_3" style="height:5000px;"></div>
+        <div class="v1_3" id="bg-gradient"></div>
         <div class="v1_5"></div>
-
-        <div class="v1_13" style="height:5000px;"></div>
+        <div class="v1_13" id="bg-rounded"></div>
         <div id="dynamic-content"></div>
+
         <div class="vhod" style="cursor:pointer;">
             <div class="v1_6"></div>
             <span class="v1_7">Войти</span>
@@ -85,19 +58,15 @@
         <div class="v4_15"></div>
         <span class="v1_10">RU</span>
         <span class="v1_11">Home</span>
-        <!-- поиск -->
+
         <div class="v4_2">
             <span class="v4_9">Куда едем?</span>
             <span class="city-value">Афины</span>
         </div>
-
-        <!--  -->
         <div class="v4_3">
             <span class="v4_6"></span>
             <span class="dates-value"></span>
         </div>
-
-        <!-- Гости -->
         <div class="v4_4">
             <span class="v4_5">Гости</span>
             <span class="guests-value">2</span>
@@ -109,12 +78,42 @@
             <span class="v4_12">-></span>
         </div>
 
-
-
-
     </div>
-
 </div>
+
+<script>
+    function applyLayout() {
+        const scale = window.innerWidth / 1080;
+
+        // Масштабируем обёртку
+        const wrapper = document.querySelector('.site-wrapper');
+        if (wrapper) {
+            wrapper.style.transform = `scale(${scale})`;
+            wrapper.style.transformOrigin = 'top center';
+            // Высота wrapper в дизайн-единицах = высота экрана / scale
+            // Это обрезает wrapper точно по высоте экрана
+            const wrapperDesignH = Math.ceil(window.innerHeight / scale);
+            wrapper.style.height = wrapperDesignH + 'px';
+        }
+
+        // Растягиваем фоновые градиенты чуть ниже низа (хвостик 300px)
+        const designH = Math.ceil(window.innerHeight / scale) + 300;
+        const bg = document.getElementById('bg-gradient');
+        const rd = document.getElementById('bg-rounded');
+        if (bg) bg.style.height = designH + 'px';
+        if (rd) rd.style.height = (designH - 143) + 'px';
+
+        // dynamic-content: от top:200px до низа wrapper
+        const dc = document.getElementById('dynamic-content');
+        if (dc) {
+            const dcHeight = Math.ceil(window.innerHeight / scale) - 200;
+            dc.style.height = dcHeight + 'px';
+        }
+    }
+
+    applyLayout();
+    window.addEventListener('resize', applyLayout);
+</script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="search-header.js"></script>
 <script src="script.js"></script>

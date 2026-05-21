@@ -314,20 +314,11 @@ window.loadHotelsBySearch = loadHotelsBySearch;
 // initHeroCarousel() вызывается после загрузки отелей (см. loadHotelsBySearch)
 // и доступна через window.initHeroCarousel
 
-// ── Масштабирование обёртки ───────────────────────────────────────────────────
-function scaleSiteWrapper() {
-    const wrapper = document.querySelector('.site-wrapper');
-    if (!wrapper) return;
-    const scale = window.innerWidth / 1080;
-    wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.transformOrigin = 'top center';
-    // Корректируем высоту body чтобы страница скроллилась правильно
-    document.body.style.minHeight = (1920 * scale) + 'px';
-}
-
 // ── Инициализация ─────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
-    scaleSiteWrapper();
+    // applyLayout() уже вызван инлайн-скриптом в HTML раньше script.js
+    // повторяем после load чтобы учесть финальные размеры
+    if (typeof applyLayout === 'function') applyLayout();
 
     const saved = localStorage.getItem('hotelSearchState');
     if (saved) {
@@ -346,7 +337,6 @@ window.addEventListener('load', () => {
     loadHotelsBySearch();
 });
 
-window.addEventListener('resize', scaleSiteWrapper);
 window.addEventListener('scroll', checkScrollAndLoad);
 
 window.HotelSelection = { getSelectedHotel, clearSelectedHotel, navigateToBookingSite };
