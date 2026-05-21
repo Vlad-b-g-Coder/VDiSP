@@ -12,7 +12,7 @@
     <style>
         .site-wrapper {
             visibility: hidden;
-            overflow: hidden; /* обрезаем по высоте экрана */
+            overflow: hidden;
         }
         .site-wrapper.scaled {
             visibility: visible;
@@ -20,7 +20,7 @@
         .v1_2 {
             position: relative;
             z-index: 10;
-            overflow: visible; /* фоновые блоки растягиваются вниз */
+            overflow: visible;
         }
         #dynamic-content {
             position: absolute !important;
@@ -30,7 +30,6 @@
             overflow-y: auto !important;
             overflow-x: hidden !important;
             background: transparent !important;
-            /* сохраняем flex из details.css, но убираем лишний top-padding */
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
@@ -40,6 +39,15 @@
         #dynamic-content::-webkit-scrollbar { width: 4px; }
         #dynamic-content::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
         #dynamic-content::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+
+        /* Панелька описания — высота по содержимому, без обрезки */
+        .dynamic-text-box,
+        #dynamicTextBox {
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+        }
     </style>
     <script>
         (function() {
