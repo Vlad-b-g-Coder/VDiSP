@@ -318,9 +318,11 @@ window.loadHotelsBySearch = loadHotelsBySearch;
 function scaleSiteWrapper() {
     const wrapper = document.querySelector('.site-wrapper');
     if (!wrapper) return;
-    const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+    const scale = window.innerWidth / 1080;
     wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.transformOrigin = 'center center';
+    wrapper.style.transformOrigin = 'top center';
+    // Корректируем высоту body чтобы страница скроллилась правильно
+    document.body.style.minHeight = (1920 * scale) + 'px';
 }
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
