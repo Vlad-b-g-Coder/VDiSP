@@ -319,20 +319,10 @@ function scaleSiteWrapper() {
     const wrapper = document.querySelector('.site-wrapper');
     if (!wrapper) return;
     const scale = window.innerWidth / 1080;
-
-    const marginX = (1080 * scale - 1080) / 2;
-    const marginY = (1920 * scale - 1920) / 2;
-
-    wrapper.style.transform       = `scale(${scale})`;
-    wrapper.style.transformOrigin = 'top left';
-    wrapper.style.marginLeft      = marginX + 'px';
-    wrapper.style.marginTop       = marginY + 'px';
-    wrapper.style.marginBottom    = marginY + 'px';
-
-    // body — фиксированный, без скролла
-    document.body.style.width     = '100vw';
-    document.body.style.height    = '100vh';
-    document.body.style.overflow  = 'hidden';
+    wrapper.style.transform = `scale(${scale})`;
+    wrapper.style.transformOrigin = 'top center';
+    // Корректируем высоту body чтобы страница скроллилась правильно
+    document.body.style.minHeight = (1920 * scale) + 'px';
 }
 
 // ── Инициализация ─────────────────────────────────────────────────────────────

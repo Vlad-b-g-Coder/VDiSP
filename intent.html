@@ -20,9 +20,9 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         .site-wrapper {
@@ -70,10 +70,10 @@
 
     <div class="v1_2">
 
-        <div class="v1_3" id="bg-gradient"></div>
+        <div class="v1_3" style="height:5000px;"></div>
         <div class="v1_5"></div>
 
-        <div class="v1_13" id="bg-rounded"></div>
+        <div class="v1_13" style="height:5000px;"></div>
         <div id="dynamic-content"></div>
         <div class="vhod" style="cursor:pointer;">
             <div class="v1_6"></div>
@@ -115,35 +115,6 @@
     </div>
 
 </div>
-<script>
-    // Растягиваем v1_3 и v1_13 до низа видимого экрана + хвостик
-    // Переводим реальные пиксели в координаты дизайна (1080px wide)
-    function stretchBgElements() {
-        const scale = window.innerWidth / 1080;
-        // Высота экрана в единицах дизайна + хвостик 200px
-        const designHeight = Math.ceil(window.innerHeight / scale) + 200;
-
-        const bg = document.getElementById('bg-gradient');
-        const rd = document.getElementById('bg-rounded');
-
-        if (bg) {
-            bg.style.height = designHeight + 'px';
-            bg.style.overflow = 'visible';
-        }
-        if (rd) {
-            // v1_13 начинается с top:143px, вычитаем смещение
-            rd.style.height = (designHeight - 143) + 'px';
-            rd.style.overflow = 'visible';
-        }
-
-        // Также убираем overflow:hidden у v1_2 чтобы дочерние не обрезались
-        const v12 = document.querySelector('.v1_2');
-        if (v12) v12.style.overflow = 'visible';
-    }
-
-    stretchBgElements();
-    window.addEventListener('resize', stretchBgElements);
-</script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="search-header.js"></script>
 <script src="script.js"></script>
