@@ -1,4 +1,9 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* styleAll.css */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
 html, body {
     width: 100%;
@@ -16,16 +21,20 @@ body {
 
 .site-wrapper {
     width: 1080px;
-    height: 100vh; /* реальная высота экрана — zoom сам пересчитает */
+    /* height задаётся скриптом: innerHeight / scale */
     background: white;
-    overflow: hidden;
+    overflow: hidden;          /* сам не скролится */
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
     position: relative;
     flex-shrink: 0;
-    /* zoom задаётся скриптом: window.innerWidth / 1080 */
+    transform-origin: top center;
 }
 
+/* Скролл только внутри #dynamic-content */
 #dynamic-content {
     background: transparent;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .v4_2, .v4_3, .v4_4 {

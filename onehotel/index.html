@@ -12,18 +12,31 @@
     <link rel="stylesheet" href="../details.css">
     <link rel="stylesheet" href="../styles.css">
     <style>
-
+        .site-wrapper {
+            visibility: hidden;
+        }
+        .site-wrapper.scaled {
+            visibility: visible;
+        }
     </style>
     <script>
         (function() {
-            function applyZoom() {
+            function scaleSiteWrapper() {
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
-                const zoom = window.innerWidth / 1080;
-                wrapper.style.zoom = zoom;
+                const scale = window.innerWidth / 1080;
+                const wrapperH = window.innerHeight / scale;
+                wrapper.style.height = wrapperH + 'px';
+                wrapper.style.transformOrigin = 'top center';
+                wrapper.style.transform = 'scale(' + scale + ')';
+                wrapper.classList.add('scaled');
             }
-            document.addEventListener('DOMContentLoaded', applyZoom);
-            window.addEventListener('resize', applyZoom);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', scaleSiteWrapper);
+            } else {
+                scaleSiteWrapper();
+            }
+            window.addEventListener('resize', scaleSiteWrapper);
         })();
     </script>
 </head>
