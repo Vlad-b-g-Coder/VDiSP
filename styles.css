@@ -10,15 +10,15 @@ body {
 }
 .v1_2 {
     width: 100%;
-    min-height: 1920px;   /* растягивается если контента больше */
+    height: 1920px;
     background: rgba(255,255,255,1);
     position: relative;
     margin: 0 auto;
-    /* overflow: hidden убран — контент идёт вниз */
+    overflow: hidden;
 }
 .v1_3 {
     width: 100%;
-    height: 100%;
+    height: calc(100% + 500px);
     background: linear-gradient(rgba(62,130,38,1), rgba(13,28,8,1));
     position: absolute;
     top: 2px;
@@ -133,7 +133,7 @@ body {
 }
 .v1_13 {
     width: 934px;
-    height: 100%;
+    height: calc(100% + 500px);
     background: linear-gradient(rgba(62,130,38,1), rgb(0, 0, 0));
     position: absolute;
     top: 143px;

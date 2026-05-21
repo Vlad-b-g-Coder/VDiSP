@@ -24,12 +24,11 @@
             function scaleSiteWrapper() {
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
-                // Масштаб только по ширине, top left — не обрезает
                 const scale = window.innerWidth / 1080;
-                wrapper.style.transformOrigin = 'top left';
-                wrapper.style.transform = `scale(${scale})`;
-                // Компенсируем высоту для body
-                document.body.style.height = (1920 * scale) + 'px';
+                wrapper.style.transformOrigin = 'top center';
+                wrapper.style.transform = 'scale(' + scale + ')';
+                // Компенсируем высоту после scale — браузер не пересчитывает сам
+                document.body.style.minHeight = (1920 * scale) + 'px';
                 wrapper.classList.add('scaled');
             }
             if (document.readyState === 'loading') {

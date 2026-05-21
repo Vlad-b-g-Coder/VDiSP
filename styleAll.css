@@ -5,14 +5,18 @@
     box-sizing: border-box;
 }
 
+html {
+    background: #000;
+}
+
 body {
     background: #000;
     display: flex;
-    justify-content: center;
-    align-items: flex-start;   /* прибито к верху */
+    justify-content: center;  /* центр по горизонтали */
+    align-items: flex-start;  /* прибито к верху */
     width: 100vw;
-    min-height: 100vh;
-    overflow: hidden;          /* скролл внутри .site-wrapper */
+    overflow-x: hidden;
+    overflow-y: hidden; /* скролл внутри .site-wrapper */
     font-family: 'Inter', sans-serif;
 }
 
@@ -20,11 +24,12 @@ body {
     width: 1080px;
     height: 1920px;
     background: white;
-    overflow-y: auto;          /* скролл внутри блока */
+    overflow-y: auto;
     overflow-x: hidden;
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     position: relative;
-    transform-origin: top left; /* масштаб от верхнего левого угла */
+    flex-shrink: 0;
+    transform-origin: top center;
     /* transform задаётся скриптом */
 }
 

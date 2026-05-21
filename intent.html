@@ -29,7 +29,7 @@
             height: 1920px;
             position: relative;
             overflow: hidden;
-            transform-origin: top left;
+            transform-origin: top center;
             visibility: hidden;
         }
         .site-wrapper.scaled {
@@ -119,12 +119,11 @@
         function scaleSiteWrapper() {
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
-            // Масштаб только по ширине, от top left — не смещает и не обрезает
             const scale = window.innerWidth / 1080;
+            wrapper.style.transformOrigin = 'top center';
             wrapper.style.transform = 'scale(' + scale + ')';
-            // Компенсируем высоту: после scale браузер видит 1920px,
-            // а реально занято scale*1920 — подгоняем body
-            document.body.style.height = (1920 * scale) + 'px';
+            // Компенсируем высоту после scale — браузер не пересчитывает сам
+            document.body.style.minHeight = (1920 * scale) + 'px';
             wrapper.classList.add('scaled');
         }
         if (document.readyState === 'loading') {
