@@ -24,12 +24,22 @@
             function scaleSiteWrapper() {
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
-                // Масштаб только по ширине, top left — не обрезает
-                const scale = window.innerWidth / 1080;
-                wrapper.style.transformOrigin = 'top left';
-                wrapper.style.transform = `scale(${scale})`;
-                // Компенсируем высоту для body
-                document.body.style.height = (1920 * scale) + 'px';
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const designW = 1080;
+                const designH = 1920;
+                if (vw < designW) {
+                    const scale = vw / designW;
+                    wrapper.style.left = '0px';
+                    wrapper.style.transformOrigin = 'top left';
+                    wrapper.style.transform = 'scale(' + scale + ')';
+                } else {
+                    const scale = Math.min(vw / designW, vh / designH);
+                    const offsetX = (vw - designW * scale) / 2;
+                    wrapper.style.left = offsetX + 'px';
+                    wrapper.style.transformOrigin = 'top left';
+                    wrapper.style.transform = 'scale(' + scale + ')';
+                }
                 wrapper.classList.add('scaled');
             }
             if (document.readyState === 'loading') {
