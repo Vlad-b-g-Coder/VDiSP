@@ -34,7 +34,7 @@ function formatPrice(amount, currency) {
 // ── Карточка отеля ────────────────────────────────────────────────────────────
 function createHotelCard(hotel, globalIndex) {
     const container = document.getElementById('dynamic-content');
-    const startY = 13;
+    const startY = 20;
     const rowStep = 355;
     const leftX  = 98;
     const rightX = 544;
