@@ -320,12 +320,8 @@ function scaleSiteWrapper() {
     if (!wrapper) return;
     const scale = window.innerWidth / 1080;
 
-    // scale() не меняет DOM-размер элемента — компенсируем отрицательными margin
-    // чтобы wrapper не занимал лишнее место и не вызывал горизонтальный скролл
-    const scaledW = 1080 * scale;
-    const scaledH = 1920 * scale;
-    const marginX = (scaledW - 1080) / 2; // отрицательный при scale < 1
-    const marginY = (scaledH - 1920) / 2;
+    const marginX = (1080 * scale - 1080) / 2;
+    const marginY = (1920 * scale - 1920) / 2;
 
     wrapper.style.transform       = `scale(${scale})`;
     wrapper.style.transformOrigin = 'top left';
@@ -333,9 +329,10 @@ function scaleSiteWrapper() {
     wrapper.style.marginTop       = marginY + 'px';
     wrapper.style.marginBottom    = marginY + 'px';
 
-    // body должен быть ровно по ширине экрана без скролла
-    document.body.style.width    = '100vw';
-    document.body.style.minHeight = scaledH + 'px';
+    // body — фиксированный, без скролла
+    document.body.style.width     = '100vw';
+    document.body.style.height    = '100vh';
+    document.body.style.overflow  = 'hidden';
 }
 
 // ── Инициализация ─────────────────────────────────────────────────────────────

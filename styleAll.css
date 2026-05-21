@@ -9,10 +9,10 @@ body {
     background: #000;
     display: flex;
     justify-content: center;
-    align-items: flex-start;   /* прижимаем к верху, не центрируем */
-    min-height: 100vh;
-    overflow-x: hidden;        /* горизонтальный скролл убран */
-    overflow-y: auto;          /* вертикальный скролл разрешён */
+    align-items: flex-start;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;           /* страница НЕ скроллится */
     font-family: 'Inter', sans-serif;
 }
 
@@ -20,11 +20,11 @@ body {
     width: 1080px;
     height: 1920px;
     background: transparent;
-    overflow: visible;          /* контент выходит вниз, скроллит body */
+    overflow: visible;
     box-shadow: none;
     position: relative;
-    transform-origin: top center;
-    /* transform задаётся скриптом */
+    transform-origin: top left;
+    flex-shrink: 0;
 }
 
 #dynamic-content {
