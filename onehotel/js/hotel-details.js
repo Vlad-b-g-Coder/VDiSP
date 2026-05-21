@@ -147,7 +147,14 @@ function renderHotelData(data) {
     updatePhotoRating(reviewScore);
 
     const descElem = document.getElementById('hotelDescription');
-    if (descElem) descElem.innerText = desc;
+    if (descElem) {
+        descElem.innerText = desc;
+        // Сбрасываем фиксированную высоту после заполнения контентом
+        const tb = document.getElementById('dynamicTextBox');
+        if (tb) {
+            tb.style.cssText += ';height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important;';
+        }
+    }
 
     const priceDisplay = document.getElementById('priceDisplay');
     if (priceDisplay) priceDisplay.innerText = priceText;
