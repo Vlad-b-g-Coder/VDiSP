@@ -319,10 +319,23 @@ function scaleSiteWrapper() {
     const wrapper = document.querySelector('.site-wrapper');
     if (!wrapper) return;
     const scale = window.innerWidth / 1080;
-    wrapper.style.transform = `scale(${scale})`;
-    wrapper.style.transformOrigin = 'top center';
-    // Корректируем высоту body чтобы страница скроллилась правильно
-    document.body.style.minHeight = (1920 * scale) + 'px';
+
+    // scale() не меняет DOM-размер элемента — компенсируем отрицательными margin
+    // чтобы wrapper не занимал лишнее место и не вызывал горизонтальный скролл
+    const scaledW = 1080 * scale;
+    const scaledH = 1920 * scale;
+    const marginX = (scaledW - 1080) / 2; // отрицательный при scale < 1
+    const marginY = (scaledH - 1920) / 2;
+
+    wrapper.style.transform       = `scale(${scale})`;
+    wrapper.style.transformOrigin = 'top left';
+    wrapper.style.marginLeft      = marginX + 'px';
+    wrapper.style.marginTop       = marginY + 'px';
+    wrapper.style.marginBottom    = marginY + 'px';
+
+    // body должен быть ровно по ширине экрана без скролла
+    document.body.style.width    = '100vw';
+    document.body.style.minHeight = scaledH + 'px';
 }
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
