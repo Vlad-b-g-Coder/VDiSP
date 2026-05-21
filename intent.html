@@ -9,63 +9,50 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="styleAll.css">
     <style>
-        html, body {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
+        body {
             background: #000;
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: flex-start;
+            min-height: 100vh;
+            overflow: hidden;
         }
 
         .site-wrapper {
             width: 1080px;
             position: relative;
-            overflow: hidden;
-            transform-origin: top left;
+            overflow: visible;
+            transform-origin: top center;
             visibility: hidden;
-            flex-shrink: 0;
         }
         .site-wrapper.scaled {
             visibility: visible;
         }
 
-        /* Шапка — фиксированная, не скроллится */
-        .v1_2 {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        #dynamic-content::-webkit-scrollbar {
+            width: 4px;
         }
-
-        /* Область со скроллом карточек */
-        #dynamic-content {
-            position: absolute;
-            top: 243px;        /* ниже шапки с поиском */
-            left: 0;
-            right: 0;
-            /* высота ставится скриптом */
-            overflow-y: scroll;
-            overflow-x: hidden;
-            z-index: 50;
+        #dynamic-content::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
         }
-
-        #dynamic-content::-webkit-scrollbar { width: 4px; }
-        #dynamic-content::-webkit-scrollbar-track { background: transparent; }
-        #dynamic-content::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        #dynamic-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="site-wrapper">
+
     <div class="v1_2">
 
         <div class="v1_3"></div>
         <div class="v1_5"></div>
+
         <div class="v1_13"></div>
-
         <div id="dynamic-content"></div>
-
-        <div class="vhod" style="cursor:pointer; position:absolute; top:0; left:0; z-index:200;">
+        <div class="vhod" style="cursor:pointer;">
             <div class="v1_6"></div>
             <span class="v1_7">Войти</span>
         </div>
@@ -75,29 +62,32 @@
         <div class="v4_15"></div>
         <span class="v1_10">RU</span>
         <span class="v1_11">Home</span>
-
-        <div class="v4_2" style="z-index:200;">
+        <!-- поиск -->
+        <div class="v4_2">
             <span class="v4_9">Куда едем?</span>
             <span class="city-value">Афины</span>
         </div>
-        <div class="v4_3" style="z-index:200;">
+
+        <div class="v4_3">
             <span class="v4_6"></span>
             <span class="dates-value"></span>
         </div>
-        <div class="v4_4" style="z-index:200;">
+
+        <!-- Гости -->
+        <div class="v4_4">
             <span class="v4_5">Гости</span>
             <span class="guests-value">2</span>
         </div>
         <span class="v4_7"></span>
         <span class="v4_8"></span>
-        <div class="strelka" style="z-index:200;">
+        <div class="strelka">
             <div class="v4_11"></div>
             <span class="v4_12">-></span>
         </div>
 
     </div>
-</div>
 
+</div>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="search-header.js"></script>
 <script src="script.js"></script>
@@ -105,29 +95,13 @@
     (function() {
         function scaleSiteWrapper() {
             const wrapper = document.querySelector('.site-wrapper');
-            const dc      = document.getElementById('dynamic-content');
             if (!wrapper) return;
-
-            const scale      = window.innerWidth / 1080;
-            const wrapperH   = window.innerHeight / scale;
-
-            wrapper.style.height          = wrapperH + 'px';
-            wrapper.style.transformOrigin = 'top left';
-            wrapper.style.transform       = 'scale(' + scale + ')';
-            wrapper.style.marginLeft      = '0px';
+            const scale = window.innerWidth / 1080;
+            wrapper.style.height = (window.innerHeight / scale) + 'px';
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.transform = 'scale(' + scale + ')';
             wrapper.classList.add('scaled');
-
-            /* центрируем вручную */
-            const leftOffset = (window.innerWidth - 1080 * scale) / 2;
-            wrapper.style.position   = 'absolute';
-            wrapper.style.left       = leftOffset + 'px';
-
-            /* dynamic-content высота = от top:243 до низа wrapper + запас */
-            if (dc) {
-                dc.style.height = (wrapperH - 243 + 60) + 'px';
-            }
         }
-
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', scaleSiteWrapper);
         } else {
