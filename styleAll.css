@@ -19,16 +19,16 @@ body {
 .site-wrapper {
     width: 1080px;
     height: 1920px;
-    background: white;
+    background: transparent;
     overflow: visible;          /* контент выходит вниз, скроллит body */
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    box-shadow: none;
     position: relative;
     transform-origin: top center;
     /* transform задаётся скриптом */
 }
 
 #dynamic-content {
-    background: white;
+    background: transparent;
 }
 
 .v4_2, .v4_3, .v4_4 {
