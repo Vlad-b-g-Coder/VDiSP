@@ -9,30 +9,32 @@ html, body {
     width: 100%;
     height: 100%;
     background: #000;
-    overflow: hidden; /* внешний скролл запрещён — только внутри .site-wrapper */
+    overflow: hidden;
     font-family: 'Inter', sans-serif;
 }
 
 body {
     display: flex;
-    justify-content: center;  /* центр по горизонтали */
-    align-items: flex-start;  /* верх */
+    justify-content: center;
+    align-items: flex-start;
 }
 
 .site-wrapper {
     width: 1080px;
     /* height задаётся скриптом: innerHeight / scale */
     background: white;
-    overflow-y: auto;          /* скролл здесь */
-    overflow-x: hidden;
+    overflow: hidden;          /* сам не скролится */
     box-shadow: 0 0 20px rgba(0,0,0,0.5);
     position: relative;
     flex-shrink: 0;
     transform-origin: top center;
 }
 
+/* Скролл только внутри #dynamic-content */
 #dynamic-content {
     background: transparent;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .v4_2, .v4_3, .v4_4 {

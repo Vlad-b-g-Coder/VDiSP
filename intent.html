@@ -26,10 +26,9 @@
 
         .site-wrapper {
             width: 1080px;
-            /* высота = высота экрана / scale, задаётся скриптом */
+            /* высота задаётся скриптом = vh / scale */
             position: relative;
-            overflow-y: auto;   /* скролл здесь */
-            overflow-x: hidden;
+            overflow: hidden;   /* сам не скролится */
             transform-origin: top center;
             visibility: hidden;
         }
@@ -42,9 +41,9 @@
             top: 200px;
             left: 0;
             right: 0;
-            /* высота авто — не ограничиваем */
-            min-height: 2000px;
-            overflow-y: visible;
+            bottom: 0;          /* растягивается до низа wrapper */
+            overflow-y: auto;   /* скролл здесь! */
+            overflow-x: hidden;
         }
         #dynamic-content > * {
             transform: translateY(-300px);
@@ -122,9 +121,8 @@
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
             const scale = window.innerWidth / 1080;
-            // Высота wrapper = высота экрана / scale — заполняет весь экран
-            const wrapperH = window.innerHeight / scale;
-            wrapper.style.height = wrapperH + 'px';
+            // wrapper ровно по размеру экрана
+            wrapper.style.height = (window.innerHeight / scale) + 'px';
             wrapper.style.transformOrigin = 'top center';
             wrapper.style.transform = 'scale(' + scale + ')';
             wrapper.classList.add('scaled');

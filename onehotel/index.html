@@ -25,8 +25,8 @@
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
                 const scale = window.innerWidth / 1080;
-                const wrapperH = window.innerHeight / scale;
-                wrapper.style.height = wrapperH + 'px';
+                // wrapper ровно по размеру экрана
+                wrapper.style.height = (window.innerHeight / scale) + 'px';
                 wrapper.style.transformOrigin = 'top center';
                 wrapper.style.transform = 'scale(' + scale + ')';
                 wrapper.classList.add('scaled');
