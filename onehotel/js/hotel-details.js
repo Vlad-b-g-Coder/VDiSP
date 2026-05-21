@@ -481,6 +481,42 @@ function escapeHtml(str) {
     });
 }
 
+// ========== КАРУСЕЛЬ ОБОЕВ ==========
+async function initCarousel() {
+    try {
+        // Восстанавливаем searchState из storage до того как читать location
+        const _saved = localStorage.getItem('hotelSearchState');
+        if (_saved) {
+            try { Object.assign(window.searchState || {}, JSON.parse(_saved)); } catch(e) {}
+        }
+
+        const state = window.searchState || {};
+        const location = state.location || 'Афины';
+
+        const res = await fetch('../hotels_data.json');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        const key = Object.keys(data).find(
+            k => k.toLowerCase() === location.toLowerCase()
+        );
+        window.allHotels = key ? data[key] : [];
+
+        // search-header.js грузится после нас — ждём пока появится функция
+        let attempts = 0;
+        const tryInit = () => {
+            if (typeof window.initHeroCarousel === 'function') {
+                window.initHeroCarousel();
+            } else if (attempts++ < 20) {
+                setTimeout(tryInit, 100);
+            }
+        };
+        tryInit();
+    } catch (e) {
+        console.warn('Carousel init failed:', e);
+    }
+}
+
 // ========== DOM CONTENT LOADED ==========
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOMContentLoaded событие сработало');
@@ -488,6 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initAuthModal();
     loadHotelData();
     initReviewForm();
+    initCarousel();
 
     document.getElementById('prevPhoto')?.addEventListener('click', prevPhoto);
     document.getElementById('nextPhoto')?.addEventListener('click', nextPhoto);
