@@ -25,20 +25,17 @@
         .site-wrapper {
             width: 1080px;
             height: 100vh;
-            overflow: hidden;
+            overflow: hidden; /* шапка не двигается */
             position: relative;
             flex-shrink: 0;
-            /* zoom задаётся скриптом */
         }
 
-        /* v1_2 занимает весь wrapper */
         .v1_2 {
-            position: absolute;
-            inset: 0;
+            position: relative;
+            z-index: 10;
         }
 
-        /* Шапка — первые ~232px, поверх всего */
-        /* dynamic-content — от шапки до низа, скролл тут */
+        /* Скролл здесь — под шапкой */
         #dynamic-content {
             position: absolute;
             top: 232px;
@@ -47,6 +44,7 @@
             bottom: 0;
             overflow-y: auto;
             overflow-x: hidden;
+            /* height задаётся из script.js по мере добавления карточек */
         }
         #dynamic-content::-webkit-scrollbar { width: 4px; }
         #dynamic-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
@@ -102,10 +100,7 @@
         function applyZoom() {
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
-            // zoom реально меняет размер в потоке — браузер знает правильную ширину/высоту
-            const zoom = window.innerWidth / 1080;
-            wrapper.style.zoom = zoom;
-            // height: 100vh уже стоит в CSS — после zoom браузер сам пересчитает
+            wrapper.style.zoom = window.innerWidth / 1080;
         }
         document.addEventListener('DOMContentLoaded', applyZoom);
         window.addEventListener('resize', applyZoom);

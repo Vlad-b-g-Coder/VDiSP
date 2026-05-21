@@ -132,12 +132,12 @@ function createHotelCard(hotel, globalIndex) {
     });
 
     container.appendChild(hotelCard);
-    // Растягиваем контейнер под все карточки
-    const bottomOfCard = topY + 350 + 40; // top + height + запас
-    const currentH = parseInt(container.style.height) || 0;
-    if (bottomOfCard > currentH) {
-        container.style.height = bottomOfCard + 'px';
-    }
+
+    // Карточки absolute — контейнер сам не растягивается.
+    // Считаем нужную высоту и ставим явно.
+    const neededH = topY + 350 + 50; // низ карточки + запас
+    const curH = parseInt(container.style.height) || 0;
+    if (neededH > curH) container.style.height = neededH + 'px';
 }
 
 // ── Пересчёт всех цен на странице (вызывается при смене дат/гостей) ──────────
@@ -246,8 +246,7 @@ async function loadMoreHotels() {
 }
 
 function checkScrollAndLoad() {
-    const scroller = document.querySelector('.site-wrapper') || document.documentElement;
-    const { scrollHeight, scrollTop, clientHeight } = scroller;
+    const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
     if (scrollHeight - scrollTop - clientHeight < 400 && !isLoading && hasMore) {
         loadMoreHotels();
     }
@@ -321,7 +320,7 @@ window.loadHotelsBySearch = loadHotelsBySearch;
 // initHeroCarousel() вызывается после загрузки отелей (см. loadHotelsBySearch)
 // и доступна через window.initHeroCarousel
 
-// scaleSiteWrapper определён в intent.html / index.html
+
 
 // ── Инициализация ─────────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
@@ -340,14 +339,9 @@ window.addEventListener('load', () => {
     }
 
     loadHotelsBySearch();
-
-    // Скролл внутри .site-wrapper, не window
-    const scroller = document.querySelector('.site-wrapper');
-    if (scroller) scroller.addEventListener('scroll', checkScrollAndLoad);
-    else window.addEventListener('scroll', checkScrollAndLoad);
 });
 
 
-
+window.addEventListener('scroll', checkScrollAndLoad);
 
 window.HotelSelection = { getSelectedHotel, clearSelectedHotel, navigateToBookingSite };
