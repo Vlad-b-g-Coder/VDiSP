@@ -23,14 +23,19 @@
             overflow: visible; /* фоновые блоки растягиваются вниз */
         }
         #dynamic-content {
-            position: absolute;
-            top: 200px;
-            left: 0;
-            right: 0;
-            /* height задаётся скриптом */
-            overflow-y: auto;
-            overflow-x: hidden;
-            background: transparent;
+            position: absolute !important;
+            top: 200px !important;
+            left: 0 !important;
+            right: 0 !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+            background: transparent !important;
+            /* сохраняем flex из details.css, но убираем лишний top-padding */
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 20px !important;
+            padding: 20px 20px 50px 20px !important;
         }
         #dynamic-content::-webkit-scrollbar { width: 4px; }
         #dynamic-content::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
@@ -161,7 +166,7 @@
             </div>
 
             <div class="v9_130" id="priceBlock"></div>
-            <span class="v9_131" id="priceDisplay">Цена</span>
+            <div class="v9_131" id="priceDisplay">Цена</div>
         </div>
 
     </div>
