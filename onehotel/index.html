@@ -73,16 +73,6 @@
                 // dynamic-content: от top:200px до низа экрана
                 const dc = document.getElementById('dynamic-content');
                 if (dc) dc.style.height = Math.ceil(window.innerHeight / scale) - 200 + 'px';
-
-                // Сбрасываем фиксированную высоту панельки описания через inline style
-                // (перебивает любой CSS включая styles.css)
-                const tb = document.getElementById('dynamicTextBox');
-                if (tb) {
-                    tb.style.height = 'auto';
-                    tb.style.minHeight = '0';
-                    tb.style.maxHeight = 'none';
-                    tb.style.overflow = 'visible';
-                }
             }
 
             if (document.readyState === 'loading') {
