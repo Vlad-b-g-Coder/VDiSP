@@ -26,9 +26,10 @@
 
         .site-wrapper {
             width: 1080px;
-            height: 1920px;
+            /* высота = высота экрана / scale, задаётся скриптом */
             position: relative;
-            overflow: hidden;
+            overflow-y: auto;   /* скролл здесь */
+            overflow-x: hidden;
             transform-origin: top center;
             visibility: hidden;
         }
@@ -41,8 +42,9 @@
             top: 200px;
             left: 0;
             right: 0;
-            height: 1920px;
-            overflow-y: auto;
+            /* высота авто — не ограничиваем */
+            min-height: 2000px;
+            overflow-y: visible;
         }
         #dynamic-content > * {
             transform: translateY(-300px);
@@ -120,10 +122,11 @@
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
             const scale = window.innerWidth / 1080;
+            // Высота wrapper = высота экрана / scale — заполняет весь экран
+            const wrapperH = window.innerHeight / scale;
+            wrapper.style.height = wrapperH + 'px';
             wrapper.style.transformOrigin = 'top center';
             wrapper.style.transform = 'scale(' + scale + ')';
-            // Компенсируем высоту после scale — браузер не пересчитывает сам
-            document.body.style.minHeight = (1920 * scale) + 'px';
             wrapper.classList.add('scaled');
         }
         if (document.readyState === 'loading') {

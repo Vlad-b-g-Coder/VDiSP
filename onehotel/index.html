@@ -25,10 +25,10 @@
                 const wrapper = document.querySelector('.site-wrapper');
                 if (!wrapper) return;
                 const scale = window.innerWidth / 1080;
+                const wrapperH = window.innerHeight / scale;
+                wrapper.style.height = wrapperH + 'px';
                 wrapper.style.transformOrigin = 'top center';
                 wrapper.style.transform = 'scale(' + scale + ')';
-                // Компенсируем высоту после scale — браузер не пересчитывает сам
-                document.body.style.minHeight = (1920 * scale) + 'px';
                 wrapper.classList.add('scaled');
             }
             if (document.readyState === 'loading') {
