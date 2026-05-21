@@ -15,54 +15,28 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            width: 100%;
             background: #000;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
             overflow-x: hidden;
-            overflow-y: auto;
+        }
+
+        body {
+            display: block;
+            margin: 0;
+            padding: 0;
         }
 
         .site-wrapper {
             width: 1080px;
             position: relative;
             overflow-x: hidden;
-            transform-origin: top center;
+            transform-origin: top left;
+            visibility: hidden;
         }
-
-        #dynamic-content {
-            position: absolute;
-            top: 200px;
-            left: 0;
-            right: 0;
-
-            height: 1920px;
-            overflow-y: auto;
+        .site-wrapper.scaled {
+            visibility: visible;
         }
-        #dynamic-content > * {
-            transform: translateY(-300px);
-        }
-        #dynamic-content::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #dynamic-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-
-        #dynamic-content::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-
-        .v1_2 {
-            position: relative;
-            z-index: 10;
-        }
-
     </style>
 </head>
 <body>
@@ -124,9 +98,10 @@
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
             const scale = window.innerWidth / 1080;
+            wrapper.style.transformOrigin = 'top left';
             wrapper.style.transform = `scale(${scale})`;
-            wrapper.style.transformOrigin = 'top center';
-            wrapper.style.marginBottom = `${(wrapper.offsetHeight * scale) - wrapper.offsetHeight}px`;
+            document.body.style.height = (wrapper.scrollHeight * scale) + 'px';
+            wrapper.classList.add('scaled');
         }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', scaleSiteWrapper);

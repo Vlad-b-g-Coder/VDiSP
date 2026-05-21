@@ -1,4 +1,4 @@
-/* styleAll.css — ширина константа, высота свободная */
+/* styleAll.css — zoom-подход: ширина всегда = 100vw, высота свободная */
 
 * {
     margin: 0;
@@ -6,34 +6,34 @@
     box-sizing: border-box;
 }
 
-body {
+html, body {
+    width: 100%;
+    min-height: 100%;
     background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;   /* не центрировать по вертикали */
-    width: 100vw;
-    min-height: 100vh;
-    overflow-x: hidden;        /* горизонтальный скролл не нужен */
-    overflow-y: auto;          /* страница скроллится вертикально */
+    overflow-x: hidden;
     font-family: 'Inter', sans-serif;
 }
 
+body {
+    display: block;  /* без flex — не центрируем, прибиваем к верху */
+    margin: 0;
+    padding: 0;
+}
+
 .site-wrapper {
-    width: 1080px;
-    /* height НЕ задаём — пусть растягивается по контенту */
+    width: 1080px;          /* дизайн-ширина */
+    min-height: 100vh;
     background: white;
     overflow-x: hidden;
-    overflow-y: visible;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
     position: relative;
-    transform-origin: top center;  /* масштаб от верха, не от центра */
+    transform-origin: top left;
+    /* transform задаётся скриптом: scale(vw/1080) */
 }
 
 #dynamic-content {
     background: transparent;
 }
 
-/* Поисковые поля */
 .v4_2, .v4_3, .v4_4 {
     display: flex;
     flex-direction: column;
