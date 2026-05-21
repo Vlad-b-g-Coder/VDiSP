@@ -24,24 +24,21 @@
 
         .site-wrapper {
             width: 1080px;
-            /* height задаётся скриптом = window.innerHeight / scale */
-            position: relative;
+            height: 100vh;
             overflow: hidden;
-            transform-origin: top center;
-            visibility: hidden;
+            position: relative;
             flex-shrink: 0;
+            /* zoom задаётся скриптом */
         }
-        .site-wrapper.scaled { visibility: visible; }
 
-        /* Занимает всю высоту wrapper — нужно чтобы bottom: 0 работало у детей */
+        /* v1_2 занимает весь wrapper */
         .v1_2 {
             position: absolute;
             inset: 0;
-            z-index: 10;
         }
 
-        /* Шапка фиксирована сверху — первые 232px */
-        /* dynamic-content — от шапки до самого низа wrapper, скролл внутри */
+        /* Шапка — первые ~232px, поверх всего */
+        /* dynamic-content — от шапки до низа, скролл тут */
         #dynamic-content {
             position: absolute;
             top: 232px;
@@ -102,16 +99,16 @@
 <script src="script.js"></script>
 <script>
     (function() {
-        function scale() {
+        function applyZoom() {
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
-            const s = window.innerWidth / 1080;
-            wrapper.style.height = (window.innerHeight / s) + 'px';
-            wrapper.style.transform = 'scale(' + s + ')';
-            wrapper.classList.add('scaled');
+            // zoom реально меняет размер в потоке — браузер знает правильную ширину/высоту
+            const zoom = window.innerWidth / 1080;
+            wrapper.style.zoom = zoom;
+            // height: 100vh уже стоит в CSS — после zoom браузер сам пересчитает
         }
-        document.addEventListener('DOMContentLoaded', scale);
-        window.addEventListener('resize', scale);
+        document.addEventListener('DOMContentLoaded', applyZoom);
+        window.addEventListener('resize', applyZoom);
     })();
 </script>
 </body>
