@@ -29,7 +29,7 @@ body {
 }
 .v1_5 {
     width: 271px;
-    height: 130px;
+    height: calc(100% + 80px);
     background: linear-gradient(90deg, #2cff00 0%, #0b3d06 100%);
     position: absolute;
     top: 1px;
@@ -133,7 +133,7 @@ body {
 }
 .v1_13 {
     width: 934px;
-    height: 100%;
+    height: calc(100% + 80px);
     background: linear-gradient(rgba(62,130,38,1), rgb(0, 0, 0));
     position: absolute;
     top: 143px;

@@ -246,8 +246,9 @@ async function loadMoreHotels() {
 }
 
 function checkScrollAndLoad() {
-    const { scrollHeight, scrollTop, clientHeight } = document.documentElement;
-    if (scrollHeight - scrollTop - clientHeight < 400 && !isLoading && hasMore) {
+    const el = document.getElementById('dynamic-content');
+    if (!el) return;
+    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400 && !isLoading && hasMore) {
         loadMoreHotels();
     }
 }
@@ -342,6 +343,9 @@ window.addEventListener('load', () => {
 });
 
 
-window.addEventListener('scroll', checkScrollAndLoad);
+document.addEventListener('DOMContentLoaded', () => {
+    const dc = document.getElementById('dynamic-content');
+    if (dc) dc.addEventListener('scroll', checkScrollAndLoad);
+});
 
 window.HotelSelection = { getSelectedHotel, clearSelectedHotel, navigateToBookingSite };
