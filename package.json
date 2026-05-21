@@ -4,9 +4,7 @@
   "description": "",
   "main": "HotelAPI.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/server.js",
-    "build": "npm install && cd server && npm install"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",

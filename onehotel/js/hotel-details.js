@@ -60,39 +60,32 @@ function getHotelIdFromData() {
             hotelData.originalData?.basicPropertyData?.id ||
             hotelData.originalData?.id;
     }
-    // Фоллбэк — читаем id из localStorage-обёртки
-    try {
-        const raw = localStorage.getItem('selectedHotelData');
-        if (raw) {
-            const saved = JSON.parse(raw);
-            return saved.id || null;
-        }
-    } catch(e) {}
     const params = new URLSearchParams(window.location.search);
-    return params.get('id') || params.get('hotel');
+    return params.get('hotel');
 }
 
 function loadHotelData() {
-    // Грузим из localStorage — туда script.js кладёт данные при клике на карточку
-    const raw = localStorage.getItem('selectedHotelData');
-    if (!raw) {
-        console.error('selectedHotelData не найден в localStorage');
-        document.getElementById('dynamic-content').innerHTML = '<p>Отель не найден. Вернитесь к списку и выберите отель.</p>';
+    const urlParams = new URLSearchParams(window.location.search);
+    const hotelId = urlParams.get('id');
+    if (!hotelId) {
+        console.error('Нет hotelId');
         return;
     }
+    fetchHotelFromServer(hotelId);
+}
+
+async function fetchHotelFromServer(hotelId) {
     try {
-        const saved = JSON.parse(raw);
-        // saved содержит: id, name, rating, price, pricePerNight, currency, nights, adults, photo, originalData
-        const data = saved.originalData || saved;
-        // Пробрасываем поля из обёртки если originalData их не имеет
-        if (!data.price && saved.price) data.price = saved.price;
-        if (!data.photo && saved.photo) data.photo = saved.photo;
+        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}`);
+        if (!response.ok) throw new Error('Отель не найден');
+        const data = await response.json();
         renderHotelData(data);
     } catch (err) {
-        console.error('Ошибка парсинга selectedHotelData:', err);
-        document.getElementById('dynamic-content').innerHTML = '<p>Ошибка данных отеля.</p>';
+        console.error('Ошибка загрузки отеля:', err);
+        document.getElementById('dynamic-content').innerHTML = '<p>Отель не найден</p>';
     }
 }
+
 function renderHotelData(data) {
     if (!data) {
         console.error('renderHotelData: data = null');
@@ -118,23 +111,12 @@ function renderHotelData(data) {
     if (roomType && !desc.includes(roomType)) desc = roomType + '\n' + desc;
 
     let priceText = 'Цена не указана';
-    // Сначала берём готовую цену из localStorage-обёртки (уже пересчитана по ночам и гостям)
-    try {
-        const raw = localStorage.getItem('selectedHotelData');
-        if (raw) {
-            const saved = JSON.parse(raw);
-            if (saved.price) priceText = saved.price;
-        }
-    } catch(e) {}
-    // Фоллбэк на данные из API
-    if (priceText === 'Цена не указана') {
-        if (hotelData.blocks && hotelData.blocks[0]?.finalPrice) {
-            const amt = Math.round(hotelData.blocks[0].finalPrice.amount);
-            const cur = hotelData.blocks[0].finalPrice.currency;
-            priceText = `${amt} ${cur}`;
-        } else if (hotelData.price) {
-            priceText = hotelData.price;
-        }
+    if (hotelData.blocks && hotelData.blocks[0]?.finalPrice) {
+        const amt = Math.round(hotelData.blocks[0].finalPrice.amount);
+        const cur = hotelData.blocks[0].finalPrice.currency;
+        priceText = `${amt} ${cur}`;
+    } else if (hotelData.price) {
+        priceText = hotelData.price;
     }
 
     const hotelNameElem = document.getElementById('hotelName');
@@ -192,7 +174,7 @@ function getHotelDescription(hotelData, basicData) {
     if (district) parts.push(`Район: ${district}`);
     if (city) parts.push(`Город: ${city}`);
     if (distance) parts.push(`До центра: ${distance}`);
-    if (price) parts.push(`Цена за день: ${Math.round(price.amount)} ${price.currency}`);
+    if (price) parts.push(`Цена: ${Math.round(price.amount)} ${price.currency}`);
     if (discount) parts.push(discount);
     if (taxes) parts.push(taxes);
     if (policies.showFreeCancellation) parts.push('Бесплатная отмена');
@@ -267,7 +249,7 @@ async function loadReviews() {
         return;
     }
     try {
-        const response = await fetch(`/api/hotels/${hotelId}/reviews`);
+        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}/reviews`);
         if (response.ok) {
             const reviews = await response.json();
             displayReviews(reviews);
@@ -315,7 +297,7 @@ async function submitReview(hotelId, userId, rating, text) {
         return false;
     }
     try {
-        const response = await fetch(`/api/hotels/${hotelId}/reviews`, {
+        const response = await fetch(`http://localhost:3000/api/hotels/${hotelId}/reviews`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId, rating, text })
@@ -378,7 +360,7 @@ function initReviewForm() {
 
 async function checkBookingStatus(hotelId, checkin, checkout) {
     try {
-        const res = await fetch(`/api/hotels/${hotelId}/booking-status?checkin=${checkin}&checkout=${checkout}`);
+        const res = await fetch(`http://localhost:3000/api/hotels/${hotelId}/booking-status?checkin=${checkin}&checkout=${checkout}`);
         const data = await res.json();
         return data.booked;
     } catch (e) {
@@ -443,7 +425,7 @@ async function bookNow() {
         return;
     }
     try {
-        const response = await fetch('/api/book', {
+        const response = await fetch('http://localhost:3000/api/book', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

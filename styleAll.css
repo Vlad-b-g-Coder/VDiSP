@@ -1,47 +1,79 @@
-/* styleAll.css */
-* {
+/* styleAll.css — блок всегда влезает в окно, прокрутка внутри */
+body {
+    background: #000;
     margin: 0;
-    padding: 0;
-    box-sizing: border-box;
 }
 
-html, body {
-    width: 100%;
-    height: 100%;
-    background: #000;
-    overflow: hidden;
-    font-family: 'Inter', sans-serif;
+#dynamic-content {
+    background: white;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* страница не скроллится */
+  font-family: 'Inter', sans-serif;
+}
+
+.site-wrapper {
+  width: 1080px;
+  height: 1920px;
+  background: white;
+  overflow-y: auto;   /* скролл внутри блока */
+  overflow-x: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  position: relative;
+  /* transform будет задан скриптом */
+}
+body {
+    background: #000;
+    margin: 0;
+}
+
+#dynamic-content {
+    background: white;
+}
+
+
+body {
+    margin: 0;
+    background: transparent;
+}
+
+.site-wrapper {
+    background: transparent;
+}
+
+#dynamic-content {
+    background: transparent;
 }
 
 .site-wrapper {
     width: 1080px;
-    /* height задаётся скриптом: innerHeight / scale */
+    height: 1920px;
     background: white;
-    overflow: hidden;          /* сам не скролится */
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-    position: relative;
-    flex-shrink: 0;
-    transform-origin: top center;
-}
-
-/* Скролл только внутри #dynamic-content */
-#dynamic-content {
-    background: transparent;
     overflow-y: auto;
     overflow-x: hidden;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    position: relative;
+    transform-origin: center center;
+    /* transform будет задан скриптом */
 }
 
 .v4_2, .v4_3, .v4_4 {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column; /* расположить подпись и значение вертикально */
+    align-items: center; /* выравнивание по горизонтали */
+    justify-content: center; /* выравнивание по вертикали */
     text-align: center;
     cursor: pointer;
 }
@@ -52,11 +84,24 @@ body {
     color: #454545;
 }
 
-.v1_9, .v1_11, .v1_10, .v1_8, .v1_6, .v1_7, .v4_11, .v4_12 {
+
+
+
+
+
+
+
+
+
+
+
+
+
+.v1_9, .v1_11, .v1_10, .v1_8, .v1_6, .v1_7,.v4_11,.v4_12 {
     overflow: hidden !important;
     z-index: 100 !important;
 }
-.v1_5, .v4_2, .v4_3, .v4_4 {
+.v1_5,.v4_2,.v4_3,.v4_4{
     overflow: hidden !important;
     z-index: 101 !important;
 }

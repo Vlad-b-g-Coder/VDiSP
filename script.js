@@ -1,124 +1,161 @@
-/**
- * script.js — работает со статичным hotels_data.json
- * Цена пересчитывается динамически: pricePerNight × ночей × коэф_гостей
- */
-
-let allHotels    = [];
+let allHotels = [];
 let currentIndex = 0;
-let isLoading    = false;
-let hasMore      = true;
+let isLoading = false;
+let hasMore = true;
 const HOTELS_PER_BATCH = 12;
+let totalRowsRendered = 0;
 
 let selectedHotel = null;
 
-// ── Коэффициент цены в зависимости от количества гостей ──────────────────────
-function guestMultiplier(adults) {
-    const multipliers = { 1: 1.0, 2: 1.6, 3: 2.1, 4: 2.5 };
-    return multipliers[adults] || 1.0 + (adults - 1) * 0.55;
-}
-
-// ── Итоговая цена с учётом ночей и гостей ────────────────────────────────────
-function calcPrice(hotel, nights, adults) {
-    const base = hotel.pricePerNight;
-    if (!base) return null;
-    return Math.round(base * nights * guestMultiplier(adults));
-}
-
-function formatPrice(amount, currency) {
-    if (!amount) return window.t ? window.t("noPrice") : 'Цена не указана';
-    const converted = window.convertPrice ? window.convertPrice(amount) : amount;
-    const symbol    = window.getCurrencySymbol ? window.getCurrencySymbol() : (currency || 'EUR');
-    return `${converted} ${symbol}`;
-}
-
-// ── Карточка отеля ────────────────────────────────────────────────────────────
 function createHotelCard(hotel, globalIndex) {
     const container = document.getElementById('dynamic-content');
-    const startY = 13;
+    const startY = 313;
     const rowStep = 355;
-    const leftX  = 98;
+    const leftX = 98;
     const rightX = 544;
 
-    const row    = Math.floor(globalIndex / 2);
-    const col    = globalIndex % 2;
-    const topY   = startY + row * rowStep;
+    const row = Math.floor(globalIndex / 2);
+    const col = globalIndex % 2;
+    const topY = startY + row * rowStep;
     const leftXpos = col === 0 ? leftX : rightX;
 
     const hotelCard = document.createElement('div');
     hotelCard.className = 'hotel-card';
-    hotelCard.style.cssText = `position:absolute;left:${leftXpos}px;top:${topY}px;width:430px;height:350px;cursor:pointer;`;
-    hotelCard.dataset.hotelId    = hotel.id || globalIndex;
+    hotelCard.style.position = 'absolute';
+    hotelCard.style.left = leftXpos + 'px';
+    hotelCard.style.top = topY + 'px';
+    hotelCard.style.width = '430px';
+    hotelCard.style.height = '350px';
+    hotelCard.style.cursor = 'pointer';
+    hotelCard.dataset.hotelId = hotel.id || globalIndex;
     hotelCard.dataset.hotelIndex = globalIndex;
 
-    // Фото
     const imgWrapper = document.createElement('div');
-    imgWrapper.style.cssText = 'position:relative;left:0;top:42px;width:430px;height:200px;border-radius:12px;overflow:hidden;';
+    imgWrapper.style.position = 'relative';
+    imgWrapper.style.left = '0px';
+    imgWrapper.style.top = '42px';
+    imgWrapper.style.width = '430px';
+    imgWrapper.style.height = '200px';
+    imgWrapper.style.borderRadius = '12px';
+    imgWrapper.style.overflow = 'hidden';
 
     const img = document.createElement('img');
-    img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center;';
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectPosition = 'center center';
+    img.style.objectFit = 'cover';
 
+    let photoUrl = null;
     const mainPhoto = hotel.basicPropertyData?.photos?.main;
-    const relativeUrl = mainPhoto?.highResUrl?.relativeUrl || mainPhoto?.lowResJpegUrl?.relativeUrl;
-    img.src = relativeUrl ? 'https://cf.bstatic.com' + relativeUrl : 'https://via.placeholder.com/430x200?text=No+Image';
-    img.alt = hotel.displayName?.text || 'Отель';
-    img.onerror = function() { this.src = 'https://via.placeholder.com/430x200?text=No+Image'; };
+    if (mainPhoto) {
+        const relativeUrl = mainPhoto.highResUrl?.relativeUrl || mainPhoto.lowResJpegUrl?.relativeUrl;
+        if (relativeUrl) {
+            photoUrl = 'https://cf.bstatic.com' + relativeUrl;
+        }
+    }
+
+    if (photoUrl) {
+        img.src = photoUrl;
+        img.alt = hotel.displayName?.text || 'Отель';
+        img.onerror = function() {
+            this.src = 'https://via.placeholder.com/430x200?text=No+Image';
+        };
+    } else {
+        img.src = 'https://via.placeholder.com/430x200?text=No+Image';
+        img.alt = 'Нет фото';
+    }
+
     imgWrapper.appendChild(img);
 
-    // Рейтинг
-    const rating = (hotel.basicPropertyData?.reviewScore?.score || 0) / 2;
-    if (rating > 0) {
-        const badge = document.createElement('div');
-        badge.style.cssText = 'position:absolute;top:12px;right:12px;background:linear-gradient(90deg,#2cff00,#0b3d06);color:white;border-radius:30px;padding:6px 14px;font-size:16px;font-weight:bold;display:flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(0,0,0,0.3);z-index:5;';
-        const stars = '★'.repeat(Math.floor(rating)) + '☆'.repeat(5 - Math.floor(rating));
-        badge.innerHTML = `<span style="font-size:14px;letter-spacing:1px">${stars}</span><span>${rating.toFixed(1)}</span>`;
-        imgWrapper.appendChild(badge);
+    const rating = hotel.basicPropertyData?.reviewScore?.score / 2;
+    if (rating && rating > 0) {
+        const ratingBadge = document.createElement('div');
+        ratingBadge.style.position = 'absolute';
+        ratingBadge.style.top = '12px';
+        ratingBadge.style.right = '12px';
+        ratingBadge.style.background = 'linear-gradient(90deg, #2cff00, #0b3d06)';
+        ratingBadge.style.color = 'white';
+        ratingBadge.style.borderRadius = '30px';
+        ratingBadge.style.padding = '6px 14px';
+        ratingBadge.style.fontSize = '16px';
+        ratingBadge.style.fontWeight = 'bold';
+        ratingBadge.style.display = 'flex';
+        ratingBadge.style.alignItems = 'center';
+        ratingBadge.style.gap = '6px';
+        ratingBadge.style.boxShadow = '0 2px 6px rgba(0,0,0,0.3)';
+        ratingBadge.style.zIndex = '5';
+
+        const starsSpan = document.createElement('span');
+        const full = Math.floor(rating);
+        let starsHtml = '';
+        for (let i = 0; i < full; i++) starsHtml += '★';
+        while (starsHtml.length < 5) starsHtml += '☆';
+        starsSpan.innerHTML = starsHtml;
+        starsSpan.style.fontSize = '14px';
+        starsSpan.style.letterSpacing = '1px';
+
+        const valueSpan = document.createElement('span');
+        valueSpan.innerText = rating.toFixed(1);
+
+        ratingBadge.appendChild(starsSpan);
+        ratingBadge.appendChild(valueSpan);
+        imgWrapper.appendChild(ratingBadge);
     }
+
     hotelCard.appendChild(imgWrapper);
 
-    // Название — фон-прямоугольник
-    const nameBg = document.createElement('div');
-    nameBg.style.cssText = `
-        position:absolute;left:0;top:242px;
-        width:430px;height:108px;
-        background:rgba(255,255,255,0.93);
-        border-radius:12px;
-        box-shadow:0 -2px 8px rgba(0,0,0,0.07);
-    `;
-    hotelCard.appendChild(nameBg);
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'hostel-info';
+    infoDiv.style.position = 'absolute';
+    infoDiv.style.left = '0px';
+    infoDiv.style.top = '245px';
+    hotelCard.appendChild(infoDiv);
 
-    // Название
     const nameSpan = document.createElement('span');
-    nameSpan.style.cssText = `
-        position:absolute;left:12px;top:250px;
-        width:248px;
-        max-height:90px;
-        font-weight:bold;font-size:22px;line-height:1.25;color:#333;z-index:2;
-        overflow:hidden;
-        display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
-        word-break:break-word;
-    `;
-    nameSpan.innerText = hotel.displayName?.text || 'Без названия';
+    nameSpan.className = 'hostel-name';
+    nameSpan.style.position = 'absolute';
+    nameSpan.style.left = '60px';
+    nameSpan.style.top = '255px';
+    const name = hotel.displayName?.text || 'Без названия';
+    nameSpan.innerText = name;
+    nameSpan.style.fontWeight = 'bold';
+    nameSpan.style.fontSize = '25px';
+    nameSpan.style.color = '#333';
     hotelCard.appendChild(nameSpan);
 
-    // Кнопка с ценой
     const priceBtn = document.createElement('div');
-    priceBtn.className = 'hotel-price-btn';
-    priceBtn.style.cssText = 'position:absolute;left:270px;top:265px;width:129px;height:82px;background:linear-gradient(90deg,rgba(109,255,42,1),rgba(0,134,35,1));border-radius:16px;border:1px solid black;display:flex;align-items:center;justify-content:center;';
+    priceBtn.className = 'hostel-price-btn';
+    priceBtn.style.position = 'absolute';
+    priceBtn.style.left = '270px';
+    priceBtn.style.top = '265px';
+    priceBtn.style.width = '129px';
+    priceBtn.style.height = '82px';
+    priceBtn.style.background = 'linear-gradient(90deg, rgba(109,255,42,1), rgba(0,134,35,1))';
+    priceBtn.style.borderRadius = '16px';
+    priceBtn.style.border = '1px solid black';
+    priceBtn.style.display = 'flex';
+    priceBtn.style.alignItems = 'center';
+    priceBtn.style.justifyContent = 'center';
+    hotelCard.appendChild(priceBtn);
+
+    let priceTextContent = 'Цена не указана';
+    if (hotel.blocks && hotel.blocks.length > 0 && hotel.blocks[0].finalPrice) {
+        const amount = hotel.blocks[0].finalPrice.amount;
+        const currency = hotel.blocks[0].finalPrice.currency;
+        if (amount) priceTextContent = `${Math.round(amount)} ${currency}`;
+    }
 
     const priceSpan = document.createElement('span');
-    priceSpan.style.cssText = 'font-weight:bold;color:#072307;font-size:20px;text-align:center;white-space:nowrap;';
-
-    const state   = window.searchState || {};
-    const nights  = calcNights(state.checkin, state.checkout) || 1;
-    const adults  = state.adults || 1;
-    const amount  = calcPrice(hotel, nights, adults);
-    priceSpan.innerText = formatPrice(amount, hotel.currency);
-
-    hotelCard.dataset.hotelIndex = globalIndex;
-    priceSpan.dataset.priceTarget = 'true';
+    priceSpan.className = 'hostel-price-text';
+    priceSpan.style.position = 'static';
+    priceSpan.innerText = priceTextContent;
+    priceSpan.style.fontWeight = 'bold';
+    priceSpan.style.color = '#072307';
+    priceSpan.style.fontSize = '20px';
+    priceSpan.style.textAlign = 'center';
+    priceSpan.style.whiteSpace = 'nowrap';
 
     priceBtn.appendChild(priceSpan);
-    hotelCard.appendChild(priceBtn);
 
     hotelCard.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -126,108 +163,85 @@ function createHotelCard(hotel, globalIndex) {
     });
 
     container.appendChild(hotelCard);
-
-    // Обновляем высоту контейнера
-    const neededH = topY + 350 + 50;
-    const curH = parseInt(container.style.height) || 0;
-    if (neededH > curH) container.style.height = neededH + 'px';
 }
 
-// ── Пересчёт всех цен ─────────────────────────────────────────────────────────
-function updateAllPrices() {
-    const state  = window.searchState || {};
-    const nights = calcNights(state.checkin, state.checkout) || 1;
-    const adults = state.adults || 1;
-
-    document.querySelectorAll('.hotel-card').forEach(card => {
-        const idx      = parseInt(card.dataset.hotelIndex);
-        const hotel    = allHotels[idx];
-        if (!hotel) return;
-        const span     = card.querySelector('[data-price-target]');
-        if (!span) return;
-        const amount   = calcPrice(hotel, nights, adults);
-        span.innerText = formatPrice(amount, hotel.currency);
-    });
-}
-
-window.updateAllPrices = updateAllPrices;
-
-// ── Считаем количество ночей ──────────────────────────────────────────────────
-function calcNights(checkin, checkout) {
-    if (!checkin || !checkout) return 1;
-    const a = new Date(checkin);
-    const b = new Date(checkout);
-    const diff = Math.round((b - a) / (1000 * 60 * 60 * 24));
-    return diff > 0 ? diff : 1;
-}
-
-// ── Выбор отеля ──────────────────────────────────────────────────────────────
 function handleHotelSelect(hotel, index) {
-    const state  = window.searchState || {};
-    const nights = calcNights(state.checkin, state.checkout) || 1;
-    const adults = state.adults || 1;
-    const amount = calcPrice(hotel, nights, adults);
-
     selectedHotel = {
-        id:          hotel.id || index,
-        name:        hotel.displayName?.text || 'Без названия',
-        rating:      hotel.basicPropertyData?.reviewScore?.score || '—',
-        price:       formatPrice(amount, hotel.currency),
-        pricePerNight: hotel.pricePerNight,
-        currency:    hotel.currency,
-        nights,
-        adults,
-        photo:       getHotelPhoto(hotel),
+        id: hotel.id || index,
+        name: hotel.displayName?.text || 'Без названия',
+        rating: hotel.basicPropertyData?.reviewScore?.score || '—',
+        price: getHotelPrice(hotel),
+        photo: getHotelPhoto(hotel),
         originalData: hotel
     };
     navigateToBookingSite(selectedHotel);
 }
 
+function getHotelPrice(hotel) {
+    if (hotel.blocks && hotel.blocks.length > 0 && hotel.blocks[0].finalPrice) {
+        const amount = hotel.blocks[0].finalPrice.amount;
+        const currency = hotel.blocks[0].finalPrice.currency;
+        if (amount) return `${Math.round(amount)} ${currency}`;
+    }
+    return 'Цена не указана';
+}
+
 function getHotelPhoto(hotel) {
     const mainPhoto = hotel.basicPropertyData?.photos?.main;
-    const relativeUrl = mainPhoto?.highResUrl?.relativeUrl || mainPhoto?.lowResJpegUrl?.relativeUrl;
-    return relativeUrl ? 'https://cf.bstatic.com' + relativeUrl : null;
+    if (mainPhoto) {
+        const relativeUrl = mainPhoto.highResUrl?.relativeUrl || mainPhoto.lowResJpegUrl?.relativeUrl;
+        if (relativeUrl) {
+            return 'https://cf.bstatic.com' + relativeUrl;
+        }
+    }
+    return null;
 }
 
 function navigateToBookingSite(hotelData) {
+    console.log('сейв в localStorage:', hotelData);
     localStorage.setItem('selectedHotelData', JSON.stringify(hotelData));
-    window.location.href = `onehotel/index.html?id=${hotelData.id}`;
+    const hotelPageUrl = `onehotel/index.html?id=${hotelData.id}`;
+    window.location.href = hotelPageUrl;
 }
 
-function getSelectedHotel()  { return selectedHotel; }
+function getSelectedHotel() {
+    return selectedHotel;
+}
+
 function clearSelectedHotel() {
     selectedHotel = null;
     localStorage.removeItem('selectedHotel');
 }
 
-// ── Проверка — нужно ли подгрузить ещё ───────────────────────────────────────
-function checkScrollAndLoad() {
-    const el = document.getElementById('dynamic-content');
-    if (!el) return;
-    if (el.scrollHeight - el.scrollTop - el.clientHeight < 400 && !isLoading && hasMore) {
-        loadMoreHotels();
-    }
-}
-
-// ── Пагинация ─────────────────────────────────────────────────────────────────
 async function loadMoreHotels() {
     if (isLoading || !hasMore) return;
+
     isLoading = true;
 
     let loader = document.getElementById('loader');
     if (!loader) {
         loader = document.createElement('div');
         loader.id = 'loader';
-        loader.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;z-index:1000;font-size:14px;';
+        loader.style.position = 'fixed';
+        loader.style.bottom = '20px';
+        loader.style.left = '50%';
+        loader.style.transform = 'translateX(-50%)';
+        loader.style.backgroundColor = '#333';
+        loader.style.color = 'white';
+        loader.style.padding = '10px 20px';
+        loader.style.borderRadius = '20px';
+        loader.style.zIndex = '1000';
+        loader.style.fontSize = '14px';
         document.body.appendChild(loader);
     }
     loader.style.display = 'block';
-    loader.innerText = 'Загрузка...';
+    loader.innerText = 'Загрузка';
 
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
-    const batch = allHotels.slice(currentIndex, currentIndex + HOTELS_PER_BATCH);
-    if (batch.length === 0) {
+    const nextBatch = allHotels.slice(currentIndex, currentIndex + HOTELS_PER_BATCH);
+
+    if (nextBatch.length === 0) {
         hasMore = false;
         loader.innerText = 'Все отели загружены';
         setTimeout(() => { loader.style.display = 'none'; }, 2000);
@@ -235,100 +249,152 @@ async function loadMoreHotels() {
         return;
     }
 
-    batch.forEach(() => {
-        createHotelCard(allHotels[currentIndex], currentIndex);
+    nextBatch.forEach((hotel) => {
+        createHotelCard(hotel, currentIndex);
         currentIndex++;
     });
 
     hasMore = currentIndex < allHotels.length;
     loader.style.display = 'none';
     isLoading = false;
+
     setTimeout(checkScrollAndLoad, 100);
 }
 
-// ── Главная функция — загрузка из статики ─────────────────────────────────────
-async function loadHotelsBySearch() {
-    const state    = window.searchState || {};
-    const location = state.location || 'Афины';
+function checkScrollAndLoad() {
+    const scrollHeight = document.documentElement.scrollHeight;
+    const scrollTop = window.scrollY || document.documentElement.scrollTop;
+    const clientHeight = window.innerHeight;
 
+    if (scrollHeight - scrollTop - clientHeight < 400 && !isLoading && hasMore) {
+        loadMoreHotels();
+    }
+}
+
+function scaleSiteWrapper() {
+    const wrapper = document.querySelector('.site-wrapper');
+    if (!wrapper) return;
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const blockWidth = 1080;
+    const blockHeight = 1920;
+    const scale = Math.min(windowWidth / blockWidth, windowHeight / blockHeight);
+    wrapper.style.transform = `scale(${scale})`;
+    wrapper.style.transformOrigin = 'center center';
+}
+
+// ── Основная функция поиска отелей ───────────────────
+// Объявлена ДО window.addEventListener('load'), чтобы
+// window.loadHotelsBySearch был доступен сразу при загрузке
+async function loadHotelsBySearch() {
+    const state = window.searchState || {};
+    const location = state.location || "Афины";
+    const checkin  = state.checkin  || "2026-06-10";
+    const checkout = state.checkout || "2026-06-15";
+    const adults   = state.adults   || 2;
+
+    // Сброс
     allHotels    = [];
     currentIndex = 0;
     hasMore      = true;
     isLoading    = false;
 
-    const container = document.getElementById('dynamic-content');
-    if (container) container.innerHTML = '';
+    const container = document.getElementById("dynamic-content");
+    if (container) container.innerHTML = "";
 
-    let loader = document.getElementById('loader');
+    let loader = document.getElementById("loader");
     if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'loader';
-        loader.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;z-index:1000;font-size:14px;';
+        loader = document.createElement("div");
+        loader.id = "loader";
+        loader.style.position = "fixed";
+        loader.style.bottom = "20px";
+        loader.style.left = "50%";
+        loader.style.transform = "translateX(-50%)";
+        loader.style.backgroundColor = "#333";
+        loader.style.color = "white";
+        loader.style.padding = "10px 20px";
+        loader.style.borderRadius = "20px";
+        loader.style.zIndex = "1000";
+        loader.style.fontSize = "14px";
         document.body.appendChild(loader);
     }
-    loader.style.display = 'block';
-    loader.innerText = 'Загружаем отели...';
+    loader.style.display = "block";
+    loader.innerText = "Ищем отели...";
 
     try {
-        const response = await fetch('/hotels_data.json');
-        if (!response.ok) throw new Error('hotels_data.json не найден');
+        const res = await fetch("http://localhost:3000/api/search", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ location, checkin, checkout, adults })
+        });
 
-        const data = await response.json();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
 
-        const key = Object.keys(data).find(
-            k => k.toLowerCase() === location.toLowerCase()
-        );
-
-        allHotels = key ? data[key] : [];
-        window.allHotels = allHotels;
-        loader.style.display = 'none';
+        allHotels = Array.isArray(data) ? data : (data.hotels || []);
+        loader.style.display = "none";
 
         if (allHotels.length === 0) {
-            if (container) container.innerHTML = `
-                <div style="position:absolute;top:100px;left:50%;transform:translateX(-50%);font-size:28px;color:#888;font-family:'Inter',sans-serif;text-align:center;">
-                    Отели не найдены для города «${location}»
-                </div>`;
+            if (container) {
+                container.innerHTML = `<div style="
+                    position:absolute; top:100px; left:50%;
+                    transform:translateX(-50%);
+                    font-size:28px; color:#888;
+                    font-family:'Inter',sans-serif;
+                    text-align:center;
+                ">Отели не найдены</div>`;
+            }
             return;
         }
 
         await loadMoreHotels();
-        initHeroCarousel();
 
     } catch (e) {
-        console.error('loadHotelsBySearch error:', e);
-        loader.innerText = 'Ошибка: ' + e.message;
-        setTimeout(() => { loader.style.display = 'none'; }, 4000);
-        if (container) container.innerHTML = `
-            <div style="position:absolute;top:100px;left:50%;transform:translateX(-50%);font-size:24px;color:#888;font-family:'Inter',sans-serif;text-align:center;">
-                Ошибка загрузки отелей<br>
-                <small style="font-size:16px;">${e.message}</small>
-            </div>`;
+        console.error("loadHotelsBySearch error:", e);
+        loader.innerText = "Ошибка загрузки";
+        setTimeout(() => { loader.style.display = "none"; }, 3000);
     }
 }
 
+// Экспортируем ДО события load
 window.loadHotelsBySearch = loadHotelsBySearch;
 
-// ── Инициализация ─────────────────────────────────────────────────────────────
+window.addEventListener('hotelSelected', (event) => {
+    console.log('Событие выбора отеля:', event.detail);
+});
+
 window.addEventListener('load', () => {
-    const saved = localStorage.getItem('hotelSearchState');
-    if (saved) {
+    scaleSiteWrapper();
+
+    const savedSearchState = localStorage.getItem("hotelSearchState");
+    if (savedSearchState) {
         try {
-            const p = JSON.parse(saved);
-            window.searchState = Object.assign(window.searchState || {}, p);
-            const citySpan   = document.querySelector('.city-value');
-            const datesSpan  = document.querySelector('.dates-value');
-            const guestsSpan = document.querySelector('.guests-value');
-            if (citySpan)   citySpan.textContent   = p.location;
-            if (datesSpan)  datesSpan.textContent  = `${p.checkin} — ${p.checkout}`;
-            if (guestsSpan) guestsSpan.textContent = `Гостей: ${p.adults}`;
+            const parsed = JSON.parse(savedSearchState);
+            if (window.searchState) {
+                window.searchState.location = parsed.location;
+                window.searchState.checkin  = parsed.checkin;
+                window.searchState.checkout = parsed.checkout;
+                window.searchState.adults   = parsed.adults;
+            } else {
+                window.searchState = parsed;
+            }
+            const citySpan   = document.querySelector(".city-value");
+            const datesSpan  = document.querySelector(".dates-value");
+            const guestsSpan = document.querySelector(".guests-value");
+            if (citySpan)   citySpan.textContent   = parsed.location;
+            if (datesSpan)  datesSpan.textContent  = `${parsed.checkin} — ${parsed.checkout}`;
+            if (guestsSpan) guestsSpan.textContent = `Гостей: ${parsed.adults}`;
         } catch(e) {}
     }
 
+    // Здесь loadHotelsBySearch гарантированно определена
     loadHotelsBySearch();
-
-    // Скролл внутри #dynamic-content
-    const dc = document.getElementById('dynamic-content');
-    if (dc) dc.addEventListener('scroll', checkScrollAndLoad);
 });
 
-window.HotelSelection = { getSelectedHotel, clearSelectedHotel, navigateToBookingSite };
+window.addEventListener('resize', scaleSiteWrapper);
+
+window.HotelSelection = {
+    getSelectedHotel,
+    clearSelectedHotel,
+    navigateToBookingSite
+};
