@@ -567,8 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initReviewForm();
     initCarousel();
 
-    document.getElementById('prevPhoto')?.addEventListener('click', prevPhoto);
-    document.getElementById('nextPhoto')?.addEventListener('click', nextPhoto);
+    document.getElementById('prevPhoto')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        prevPhoto();
+    });
+    document.getElementById('nextPhoto')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        nextPhoto();
+    });
     document.getElementById('photoGallery')?.addEventListener('click', () => {
         document.getElementById('mainPhoto')?.requestFullscreen();
     });
