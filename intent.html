@@ -15,27 +15,53 @@
             box-sizing: border-box;
         }
 
-        html, body {
-            width: 100%;
-            background: #000;
-            overflow-x: hidden;
-        }
-
         body {
-            display: block;
-            margin: 0;
-            padding: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* прибито к верху */
+            min-height: 100vh;
+            overflow: hidden; /* скролл внутри site-wrapper */
         }
 
         .site-wrapper {
             width: 1080px;
+            height: 1920px;
             position: relative;
-            overflow-x: hidden;
+            overflow: hidden;
             transform-origin: top left;
             visibility: hidden;
         }
         .site-wrapper.scaled {
             visibility: visible;
+        }
+
+        #dynamic-content {
+            position: absolute;
+            top: 200px;
+            left: 0;
+            right: 0;
+            height: 1920px;
+            overflow-y: auto;
+        }
+        #dynamic-content > * {
+            transform: translateY(-300px);
+        }
+        #dynamic-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        #dynamic-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        #dynamic-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        .v1_2 {
+            position: relative;
+            z-index: 10;
         }
     </style>
 </head>
@@ -65,7 +91,6 @@
             <span class="city-value">Афины</span>
         </div>
 
-        <!--  -->
         <div class="v4_3">
             <span class="v4_6"></span>
             <span class="dates-value"></span>
@@ -83,9 +108,6 @@
             <span class="v4_12">-></span>
         </div>
 
-
-
-
     </div>
 
 </div>
@@ -97,10 +119,12 @@
         function scaleSiteWrapper() {
             const wrapper = document.querySelector('.site-wrapper');
             if (!wrapper) return;
+            // Масштаб только по ширине, от top left — не смещает и не обрезает
             const scale = window.innerWidth / 1080;
-            wrapper.style.transformOrigin = 'top left';
-            wrapper.style.transform = `scale(${scale})`;
-            document.body.style.height = (wrapper.scrollHeight * scale) + 'px';
+            wrapper.style.transform = 'scale(' + scale + ')';
+            // Компенсируем высоту: после scale браузер видит 1920px,
+            // а реально занято scale*1920 — подгоняем body
+            document.body.style.height = (1920 * scale) + 'px';
             wrapper.classList.add('scaled');
         }
         if (document.readyState === 'loading') {
