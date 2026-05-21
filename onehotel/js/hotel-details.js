@@ -481,6 +481,47 @@ function escapeHtml(str) {
     });
 }
 
+// ========== ВЫБОР ОТЕЛЯ ИЗ КАРУСЕЛИ ==========
+function calcNightsLocal(checkin, checkout) {
+    if (!checkin || !checkout) return 1;
+    const diff = Math.round((new Date(checkout) - new Date(checkin)) / 86400000);
+    return diff > 0 ? diff : 1;
+}
+
+function handleHotelSelect(hotel, index) {
+    const state   = window.searchState || {};
+    const nights  = calcNightsLocal(state.checkin, state.checkout) || 1;
+    const adults  = state.adults || 1;
+    const base    = hotel.pricePerNight;
+    const mults   = { 1: 1.0, 2: 1.6, 3: 2.1, 4: 2.5 };
+    const mult    = mults[adults] || 1.0 + (adults - 1) * 0.55;
+    const amount  = base ? Math.round(base * nights * mult) : null;
+    const symbol  = window.getCurrencySymbol ? window.getCurrencySymbol() : 'EUR';
+    const converted = (amount && window.convertPrice) ? window.convertPrice(amount) : amount;
+    const price   = converted ? `${converted} ${symbol}` : 'Цена не указана';
+
+    const mainPhoto = hotel.basicPropertyData?.photos?.main;
+    const rel = mainPhoto?.highResUrl?.relativeUrl || mainPhoto?.lowResJpegUrl?.relativeUrl;
+    const photo = rel ? 'https://cf.bstatic.com' + rel : null;
+
+    const selectedHotelData = {
+        id:            hotel.basicPropertyData?.id || hotel.id || index,
+        name:          hotel.displayName?.text || 'Отель',
+        rating:        hotel.basicPropertyData?.reviewScore?.score || '—',
+        price,
+        pricePerNight: hotel.pricePerNight,
+        currency:      hotel.currency,
+        nights,
+        adults,
+        photo,
+        originalData:  hotel
+    };
+
+    localStorage.setItem('selectedHotelData', JSON.stringify(selectedHotelData));
+    window.location.href = `../onehotel/index.html?id=${selectedHotelData.id}`;
+}
+window.handleHotelSelect = handleHotelSelect;
+
 // ========== КАРУСЕЛЬ ОБОЕВ ==========
 async function initCarousel() {
     try {
